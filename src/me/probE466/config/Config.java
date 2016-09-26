@@ -1,12 +1,9 @@
 package me.probE466.config;
 
 
-import sun.misc.IOUtils;
+import me.probE466.helper.IOHelper;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Properties;
 
 /**
@@ -14,32 +11,46 @@ import java.util.Properties;
  */
 public class Config {
 
-    private File configFile = new java.io.File(System.getProperty("user.home") + "/.push/push.properties");
+    private Properties properties;
 
-    public void genereateConfig() {
+    private File configFile = new java.io.File(System.getProperty("user.home") + "/.push/push.properties");
+    private File configFileDir = new java.io.File(System.getProperty("user.home") + "/.push");
+
+    public int queryConfig() {
         Properties properties = new Properties();
-        InputStream fsin = getClass().getClassLoader().getResourceAsStream("push.properties");
-        if(fsin == null) {
+//        InputStream fsin = this.getClass().getClassLoader().getResourceAsStream("push.properties");
+        FileInputStream fsin = null;
+        try {
+            fsin = new FileInputStream(new File("push.properties"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
             System.out.println("push.properties not found in classpath");
         }
-        if(!configFile.exists()) {
-            configFile.mkdirs();
-            try {
+        if (!configFile.exists()) {
+            configFileDir.mkdirs();
+            try (FileOutputStream fout = new FileOutputStream(configFile)) {
                 configFile.createNewFile();
-                FileOutputStream fout = new FileOutputStream(configFile);
+                IOHelper.copy(fsin, fout);
+                fout.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
 
-
         try {
-            properties.load(fsin);
+            FileInputStream sysIn = new FileInputStream(configFile);
+            properties.load(sysIn);
+            this.properties = properties;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return Integer.valueOf(properties.getProperty("offset"));
+    }
 
+
+    public Properties getProperties() {
+        return properties;
     }
 
 }
