@@ -1,4 +1,4 @@
-package me.probE466.helper;
+package helper;
 
 import java.io.IOException;
 import java.io.InputStream;

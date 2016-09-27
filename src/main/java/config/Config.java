@@ -1,7 +1,8 @@
-package me.probE466.config;
+package config;
 
 
-import me.probE466.helper.IOHelper;
+
+import helper.IOHelper;
 
 import java.io.*;
 import java.util.Properties;
@@ -11,12 +12,12 @@ import java.util.Properties;
  */
 public class Config {
 
-    private Properties properties;
+    private static Properties properties;
 
-    private File configFile = new java.io.File(System.getProperty("user.home") + "/.push/push.properties");
-    private File configFileDir = new java.io.File(System.getProperty("user.home") + "/.push");
+    private static File configFile = new java.io.File(System.getProperty("user.home") + "/.push/push.properties");
+    private static File configFileDir = new java.io.File(System.getProperty("user.home") + "/.push");
 
-    public int queryConfig() {
+    public static int queryConfig() {
         Properties properties = new Properties();
 //        InputStream fsin = this.getClass().getClassLoader().getResourceAsStream("push.properties");
         FileInputStream fsin = null;
@@ -41,7 +42,7 @@ public class Config {
         try {
             FileInputStream sysIn = new FileInputStream(configFile);
             properties.load(sysIn);
-            this.properties = properties;
+            Config.properties = properties;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,7 +50,7 @@ public class Config {
     }
 
 
-    public Properties getProperties() {
+    public static Properties getProperties() {
         return properties;
     }
 

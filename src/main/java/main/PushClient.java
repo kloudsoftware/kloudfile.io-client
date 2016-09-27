@@ -1,7 +1,8 @@
-package me.probE466;
+package main;
 
-import me.probE466.config.Config;
-import me.probE466.image.ScreenGrab;
+
+import config.Config;
+import image.ScreenGrab;
 
 /**
  * Created by larsg on 26.09.2016.
@@ -11,8 +12,7 @@ public class PushClient {
     private int offset;
     public static void main(String[] args) {
         PushClient pushClient = new PushClient();
-        Config config = new Config();
-        pushClient.offset = config.queryConfig();
+        pushClient.offset = Config.queryConfig();
         System.out.println(pushClient.offset);
 
         ScreenGrab screenGrab = new ScreenGrab(pushClient);

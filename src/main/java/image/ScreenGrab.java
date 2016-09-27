@@ -1,20 +1,17 @@
-package me.probE466.image;
+package image;
 
-import me.probE466.PushClient;
+import http.Upload;
+import main.PushClient;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Created by larsg on 26.09.2016.
@@ -76,9 +73,15 @@ public class ScreenGrab implements MouseMotionListener, MouseListener {
             capture = new Robot().createScreenCapture(new Rectangle(x,y,width,height));
             File imageFile = new File("image.png");
             ImageIO.write(capture, "png", imageFile);
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(capture, "png ", os);
+            InputStream is = new ByteArrayInputStream(os.toByteArray());
+            Upload.uploadDataToServer(is, "test");
         } catch (AWTException | IOException ex) {
             ex.printStackTrace();
         }
+
+        System.exit(0);
 
 
     }
