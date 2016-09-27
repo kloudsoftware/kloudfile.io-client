@@ -2,6 +2,7 @@ package me.probE466.image;
 
 import me.probE466.PushClient;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -10,13 +11,24 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Created by larsg on 26.09.2016.
  */
-public class ScreenGrab {
+public class ScreenGrab implements MouseMotionListener, MouseListener {
 
     private PushClient instance;
+    private Point begin, end;
+    private JFrame jFrame;
+    private int x;
+    private int y;
+    private int width;
+    private int height;
+    private boolean hasSelected = false;
 
     public ScreenGrab(PushClient pushClient) {
         this.instance = pushClient;
@@ -36,74 +48,10 @@ public class ScreenGrab {
         return capture;
     }
 
-    public BufferedImage getPartOfScreen() {
-        final Point[] begin = new Point[1];
-        final Point[] end = new Point[1];
-
-        JFrame jFrame = new JFrame();
-        jFrame.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                begin[0] = e.getPoint();
-
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-
-                jFrame.getGraphics().setColor(Color.red);
-
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
-        });
-        jFrame.addMouseMotionListener(new MouseMotionListener() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                final Graphics graphics = jFrame.getGraphics();
-                graphics.clearRect(0, 0, jFrame.getWidth(), jFrame.getHeight());
-                end[0] = e.getPoint();
-
-                int x = begin[0].x;
-                int y = begin[0].y;
-                final int x2 = end[0].x;
-                final int y2 = end[0].y;
-                int width = end[0].x - x;
-                int height = end[0].y - y;
-
-                if (width < 0) {
-                    width *= -1;
-                    x = x - width;
-                }
-
-                if (height < 0) {
-                    height *= -1;
-                    y = y - height;
-                }
-
-
-                graphics.setColor(new Color(1f,1f,1f,.5f));
-                graphics.drawRect(x, y, width, height);
-                graphics.fillRect(x, y, width, height);
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-
-            }
-        });
+    public void getPartOfScreen() {
+        jFrame = new JFrame();
+        jFrame.addMouseListener(this);
+        jFrame.addMouseMotionListener(this);
         jFrame.setUndecorated(true);
         jFrame.setBackground(new Color(1.0f, 1.0f, 1.0f, 0.1f));
         Rectangle2D result = new Rectangle2D.Double();
@@ -116,17 +64,79 @@ public class ScreenGrab {
         jFrame.setSize((int) result.getWidth(), (int) result.getHeight());
         jFrame.setVisible(true);
         jFrame.setLocation(instance.getOffset(), 0);
-        return null;
     }
 
 
-}
+    private void captureImage() {
+        BufferedImage capture = null;
 
-class MyMouse implements MouseMotionListener {
+        jFrame.setVisible(false);
+
+        try {
+            capture = new Robot().createScreenCapture(new Rectangle(x,y,width,height));
+            File imageFile = new File("image.png");
+            ImageIO.write(capture, "png", imageFile);
+        } catch (AWTException | IOException ex) {
+            ex.printStackTrace();
+        }
+
+
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        begin = e.getPoint();
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        captureImage();
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        System.out.println("dragged: x: " + e.getX() + " y: " + e.getY());
+        if(jFrame == null) {
+            return;
+        }
+        final Graphics graphics = jFrame.getGraphics();
+        graphics.clearRect(0, 0, jFrame.getWidth(), jFrame.getHeight());
+        end = e.getPoint();
+
+        x = begin.x;
+        y = begin.y;
+        width = end.x - x;
+        height = end.y - y;
+
+        if (width < 0) {
+            width *= -1;
+            x = x - width;
+        }
+
+        if (height < 0) {
+            height *= -1;
+            y = y - height;
+        }
+
+
+        graphics.setColor(new Color(1f,1f,1f,.5f));
+        graphics.drawRect(x, y, width, height);
+        graphics.fillRect(x, y, width, height);
+
     }
 
     @Override
