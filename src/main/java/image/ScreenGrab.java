@@ -1,31 +1,32 @@
 package image;
 
-import http.Upload;
+import javafx.geometry.Point2D;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.stage.Stage;
 import main.PushClient;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
-/**
- * Created by larsg on 26.09.2016.
- */
-public class ScreenGrab implements MouseMotionListener, MouseListener {
+
+public class ScreenGrab {
 
     private PushClient instance;
-    private Point begin, end;
-    private JFrame jFrame;
+    private Point2D begin;
+    private Point2D end;
     private int x;
     private int y;
-    private int width;
-    private int height;
+    private double width;
+    private double height;
     private boolean hasSelected = false;
+    private Stage stage;
 
     public ScreenGrab(PushClient pushClient) {
         this.instance = pushClient;
@@ -45,12 +46,18 @@ public class ScreenGrab implements MouseMotionListener, MouseListener {
         return capture;
     }
 
-    public void getPartOfScreen() {
-        jFrame = new JFrame();
-        jFrame.addMouseListener(this);
-        jFrame.addMouseMotionListener(this);
-        jFrame.setUndecorated(true);
-        jFrame.setBackground(new Color(1.0f, 1.0f, 1.0f, 0.1f));
+    public void getPartOfScreen(Stage primaryStage) {
+
+        this.stage = primaryStage;
+
+        stage.setOpacity(.5);
+
+        stage.setTitle("Space Invaders");
+        stage.setResizable(false);
+        final Group root = new Group();
+        final Scene mainScene = new Scene(root);
+        stage.setScene(mainScene);
+
         Rectangle2D result = new Rectangle2D.Double();
         GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
         for (GraphicsDevice gd : localGE.getScreenDevices()) {
@@ -58,25 +65,77 @@ public class ScreenGrab implements MouseMotionListener, MouseListener {
                 Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
             }
         }
-        jFrame.setSize((int) result.getWidth(), (int) result.getHeight());
-        jFrame.setVisible(true);
-        jFrame.setLocation(instance.getOffset(), 0);
+
+        final javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(result.getWidth(), result.getHeight());
+        root.getChildren().add(canvas);
+        final java.util.List<String> input = new ArrayList<>();
+
+
+        mainScene.setOnKeyPressed(e -> {
+            String code = e.getCode().toString();
+            if (!input.contains(code)) {
+                input.add(code);
+            }
+        });
+
+        mainScene.setOnKeyReleased(e -> {
+            String code = e.getCode().toString();
+            input.remove(code);
+        });
+
+        mainScene.setOnMousePressed(event -> this.begin = new Point2D(event.getX(), event.getY()));
+
+        mainScene.setOnMouseDragged(event -> {
+
+            this.end = new Point2D(event.getX(), event.getY());
+
+            final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
+            graphicsContext2D.setFill(new javafx.scene.paint.Color(1f, 1f, 1f, 1f));
+            graphicsContext2D.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            width = end.getX() - begin.getX();
+            height = end.getY() - begin.getY();
+
+            if (width < 0) {
+                width *= -1;
+                begin = new Point2D(begin.getX() - width, begin.getY());
+            }
+
+            if (height < 0) {
+                height *= -1;
+                begin = new Point2D(begin.getX(), begin.getY() - height);
+            }
+
+            graphicsContext2D.setFill(javafx.scene.paint.Color.RED);
+            graphicsContext2D.strokeRect(begin.getX(), begin.getY(), width, height);
+            graphicsContext2D.fillRect(begin.getX(), begin.getY(), width, height);
+        });
+
+        mainScene.setOnMouseReleased(event -> captureImage());
+
+        stage.show();
+
+
     }
 
 
     private void captureImage() {
-        BufferedImage capture = null;
+        BufferedImage capture;
 
-        jFrame.setVisible(false);
-
+        stage.setOpacity(0);
         try {
-            capture = new Robot().createScreenCapture(new Rectangle(x,y,width,height));
+            capture = new Robot().createScreenCapture(new Rectangle(
+                    (int) begin.getX(),
+                    (int) begin.getY(),
+                    (int) width,
+                    (int) height
+            ));
             File imageFile = new File("image.png");
             ImageIO.write(capture, "png", imageFile);
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ImageIO.write(capture, "png ", os);
-            InputStream is = new ByteArrayInputStream(os.toByteArray());
-            Upload.uploadDataToServer(is, "test");
+            // TODO: 9/28/2016 Switched to saving to file for debug
+            //ByteArrayOutputStream os = new ByteArrayOutputStream();
+            // ImageIO.write(capture, "png ", os);
+            // InputStream is = new ByteArrayInputStream(os.toByteArray());
+            // Upload.uploadDataToServer(is, "test");
         } catch (AWTException | IOException ex) {
             ex.printStackTrace();
         }
@@ -86,64 +145,8 @@ public class ScreenGrab implements MouseMotionListener, MouseListener {
 
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
 
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        begin = e.getPoint();
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        captureImage();
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        if(jFrame == null) {
-            return;
-        }
-        final Graphics graphics = jFrame.getGraphics();
-        graphics.clearRect(0, 0, jFrame.getWidth(), jFrame.getHeight());
-        end = e.getPoint();
-
-        x = begin.x;
-        y = begin.y;
-        width = end.x - x;
-        height = end.y - y;
-
-        if (width < 0) {
-            width *= -1;
-            x = x - width;
-        }
-
-        if (height < 0) {
-            height *= -1;
-            y = y - height;
-        }
-
-
-        graphics.setColor(new Color(1f,1f,1f,.5f));
-        graphics.drawRect(x, y, width, height);
-        graphics.fillRect(x, y, width, height);
-
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
+    public void start(Stage primaryStage) throws Exception {
 
     }
 }
