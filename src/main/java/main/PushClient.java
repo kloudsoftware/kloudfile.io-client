@@ -5,6 +5,7 @@ import config.Config;
 import image.ScreenGrab;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class PushClient extends Application {
 
@@ -23,6 +24,7 @@ public class PushClient extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        primaryStage.initStyle(StageStyle.UNDECORATED);
         PushClient pushClient = new PushClient();
         pushClient.offset = Config.queryConfig();
         System.out.println(pushClient.offset);
