@@ -52,7 +52,7 @@ public class ScreenGrab {
 
         stage.setOpacity(.5);
 
-        stage.setTitle("Space Invaders");
+        stage.setTitle("Push");
         stage.setResizable(false);
         final Group root = new Group();
         final Scene mainScene = new Scene(root);
@@ -121,7 +121,7 @@ public class ScreenGrab {
     private void captureImage() {
         BufferedImage capture;
 
-        stage.setOpacity(0);
+        stage.hide();
         try {
             capture = new Robot().createScreenCapture(new Rectangle(
                     (int) begin.getX(),
