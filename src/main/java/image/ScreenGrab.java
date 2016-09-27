@@ -3,8 +3,10 @@ package image;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import main.PushClient;
 
 import javax.imageio.ImageIO;
@@ -13,16 +15,12 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-
 
 public class ScreenGrab {
 
     private PushClient instance;
     private Point2D begin;
     private Point2D end;
-    private int x;
-    private int y;
     private double width;
     private double height;
     private boolean hasSelected = false;
@@ -47,13 +45,14 @@ public class ScreenGrab {
     }
 
     public void getPartOfScreen(Stage primaryStage) {
-
         this.stage = primaryStage;
 
+        stage.setX(instance.getOffset());
+        stage.setY(0);
         stage.setOpacity(.5);
-
         stage.setTitle("Push");
         stage.setResizable(false);
+        stage.initStyle(StageStyle.UNDECORATED);
         final Group root = new Group();
         final Scene mainScene = new Scene(root);
         stage.setScene(mainScene);
@@ -66,22 +65,8 @@ public class ScreenGrab {
             }
         }
 
-        final javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(result.getWidth(), result.getHeight());
+        final Canvas canvas = new Canvas(result.getWidth(), result.getHeight());
         root.getChildren().add(canvas);
-        final java.util.List<String> input = new ArrayList<>();
-
-
-        mainScene.setOnKeyPressed(e -> {
-            String code = e.getCode().toString();
-            if (!input.contains(code)) {
-                input.add(code);
-            }
-        });
-
-        mainScene.setOnKeyReleased(e -> {
-            String code = e.getCode().toString();
-            input.remove(code);
-        });
 
         mainScene.setOnMousePressed(event -> this.begin = new Point2D(event.getX(), event.getY()));
 
@@ -92,29 +77,29 @@ public class ScreenGrab {
             final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
             graphicsContext2D.setFill(new javafx.scene.paint.Color(1f, 1f, 1f, 1f));
             graphicsContext2D.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-            width = end.getX() - begin.getX();
-            height = end.getY() - begin.getY();
+            width = Math.abs(end.getX() - begin.getX());
+            height = Math.abs(end.getY() - begin.getY());
 
-            if (width < 0) {
-                width *= -1;
-                begin = new Point2D(begin.getX() - width, begin.getY());
+            Point2D start;
+            if (begin.getX() > end.getX() && begin.getY() > end.getY()) {
+                start = new Point2D(begin.getX() - width, begin.getY() - height);
+            } else if (begin.getX() > end.getX()) {
+                start = new Point2D(begin.getX() - width, begin.getY());
+            } else if (begin.getY() > end.getY()) {
+                start = new Point2D(begin.getX(), begin.getY() - height);
+            } else {
+                start = begin;
             }
 
-            if (height < 0) {
-                height *= -1;
-                begin = new Point2D(begin.getX(), begin.getY() - height);
-            }
 
             graphicsContext2D.setFill(javafx.scene.paint.Color.RED);
-            graphicsContext2D.strokeRect(begin.getX(), begin.getY(), width, height);
-            graphicsContext2D.fillRect(begin.getX(), begin.getY(), width, height);
+            graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
+            graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
         });
 
         mainScene.setOnMouseReleased(event -> captureImage());
 
         stage.show();
-
-
     }
 
 
@@ -142,11 +127,6 @@ public class ScreenGrab {
 
         System.exit(0);
 
-
-    }
-
-
-    public void start(Stage primaryStage) throws Exception {
 
     }
 }
