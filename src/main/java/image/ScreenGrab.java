@@ -5,6 +5,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.*;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import main.PushClient;
@@ -92,7 +93,7 @@ public class ScreenGrab {
             }
 
 
-            graphicsContext2D.setFill(javafx.scene.paint.Color.RED);
+            graphicsContext2D.setFill(javafx.scene.paint.Color.GRAY);
             graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
             graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
         });
@@ -109,7 +110,7 @@ public class ScreenGrab {
         stage.hide();
         try {
             capture = new Robot().createScreenCapture(new Rectangle(
-                    (int) begin.getX(),
+                    (int) begin.getX() + instance.getOffset(),
                     (int) begin.getY(),
                     (int) width,
                     (int) height
