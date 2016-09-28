@@ -123,7 +123,7 @@ public class ScreenGrab {
 
                     (int) start.getX() + instance.getOffset(),
                     (int) start.getY(),
-                    (int) width + instance.getOffset(),
+                    (int) width,
                     (int) height
             ));
             File imageFile = new File("image.png");
