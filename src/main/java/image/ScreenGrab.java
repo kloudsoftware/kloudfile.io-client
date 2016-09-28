@@ -69,7 +69,9 @@ public class ScreenGrab {
         stage.initStyle(StageStyle.TRANSPARENT);
         final Group root = new Group();
         final Scene mainScene = new Scene(root);
-        mainScene.setFill(null);
+        if (!isWindows()) {
+            mainScene.setFill(null);
+        }
         stage.setScene(mainScene);
 
         Rectangle2D result = new Rectangle2D.Double();
