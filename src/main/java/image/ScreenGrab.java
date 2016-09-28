@@ -1,5 +1,6 @@
 package image;
 
+import http.Upload;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -13,8 +14,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 public class ScreenGrab {
 
@@ -229,10 +229,10 @@ public class ScreenGrab {
             File imageFile = new File("image.png");
             ImageIO.write(capture, "png", imageFile);
             // TODO: 9/28/2016 Switched to saving to file for debug
-            //ByteArrayOutputStream os = new ByteArrayOutputStream();
-            // ImageIO.write(capture, "png ", os);
-            // InputStream is = new ByteArrayInputStream(os.toByteArray());
-            // Upload.uploadDataToServer(is, "test");
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(capture, "png ", os);
+            InputStream is = new ByteArrayInputStream(os.toByteArray());
+            Upload.uploadDataToServer(imageFile);
         } catch (AWTException | IOException ex) {
             ex.printStackTrace();
         }
