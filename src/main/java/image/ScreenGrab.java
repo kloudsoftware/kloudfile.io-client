@@ -81,26 +81,33 @@ public class ScreenGrab {
             width = Math.abs(end.getX() - begin.getX());
             height = Math.abs(end.getY() - begin.getY());
 
-            Point2D start;
-            if (begin.getX() > end.getX() && begin.getY() > end.getY()) {
-                start = new Point2D(begin.getX() - width, begin.getY() - height);
-            } else if (begin.getX() > end.getX()) {
-                start = new Point2D(begin.getX() - width, begin.getY());
-            } else if (begin.getY() > end.getY()) {
-                start = new Point2D(begin.getX(), begin.getY() - height);
-            } else {
-                start = begin;
-            }
+            Point2D start = calculateStartPoint();
 
 
             graphicsContext2D.setFill(javafx.scene.paint.Color.GRAY);
             graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
             graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
+
+
         });
 
         mainScene.setOnMouseReleased(event -> captureImage());
 
         stage.show();
+    }
+
+    private Point2D calculateStartPoint() {
+        Point2D start;
+        if (begin.getX() > end.getX() && begin.getY() > end.getY()) {
+            start = new Point2D(begin.getX() - width, begin.getY() - height);
+        } else if (begin.getX() > end.getX()) {
+            start = new Point2D(begin.getX() - width, begin.getY());
+        } else if (begin.getY() > end.getY()) {
+            start = new Point2D(begin.getX(), begin.getY() - height);
+        } else {
+            start = begin;
+        }
+        return start;
     }
 
 
@@ -109,10 +116,14 @@ public class ScreenGrab {
 
         stage.hide();
         try {
+
+            Point2D start = calculateStartPoint();
             capture = new Robot().createScreenCapture(new Rectangle(
-                    (int) begin.getX() + instance.getOffset(),
-                    (int) begin.getY(),
-                    (int) width,
+
+
+                    (int) start.getX() + instance.getOffset(),
+                    (int) start.getY(),
+                    (int) width + instance.getOffset(),
                     (int) height
             ));
             File imageFile = new File("image.png");
