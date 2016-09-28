@@ -75,7 +75,7 @@ public class ScreenGrab {
             this.end = new Point2D(event.getX(), event.getY());
 
             final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-            graphicsContext2D.setFill(new javafx.scene.paint.Color(1f, 1f, 1f, 1f));
+            graphicsContext2D.setFill(new javafx.scene.paint.Color(1f, 1f, 1f, 0f));
             graphicsContext2D.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
             width = Math.abs(end.getX() - begin.getX());
             height = Math.abs(end.getY() - begin.getY());
@@ -91,17 +91,17 @@ public class ScreenGrab {
         });
 
         mainScene.setOnMouseReleased(event -> {
-            mainScene.getWindow().hide();
+
             stage.setOpacity(0);
-            stage.hide();
 
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        });
+
+        mainScene.setOnKeyPressed(event -> {
+            if (width > 0 && height > 0) {
+                if (event.getCode().toString().equals("ENTER")) {
+                    captureImage();
+                }
             }
-
-            captureImage();
         });
 
         stage.show();
@@ -123,6 +123,7 @@ public class ScreenGrab {
 
 
     private void captureImage() {
+
         BufferedImage capture;
 
         try {
