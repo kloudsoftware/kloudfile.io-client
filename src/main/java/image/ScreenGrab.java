@@ -50,7 +50,7 @@ public class ScreenGrab {
 
         stage.setX(instance.getOffset());
         stage.setY(0);
-        stage.setOpacity(.5);
+        stage.setOpacity(.2);
         stage.setTitle("Push");
         stage.setResizable(false);
         stage.initStyle(StageStyle.UNDECORATED);
