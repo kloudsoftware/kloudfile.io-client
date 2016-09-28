@@ -18,6 +18,7 @@ import java.io.IOException;
 
 public class ScreenGrab {
 
+    private static String OS = System.getProperty("os.name").toLowerCase();
     private PushClient instance;
     private Point2D begin;
     private Point2D end;
@@ -25,8 +26,11 @@ public class ScreenGrab {
     private double height;
     private boolean hasSelected = false;
     private Stage stage;
-    private static String OS = System.getProperty("os.name").toLowerCase();
 
+
+    public ScreenGrab(PushClient pushClient) {
+        this.instance = pushClient;
+    }
 
     private static boolean isWindows() {
         return (OS.contains("win"));
@@ -38,10 +42,6 @@ public class ScreenGrab {
 
     private static boolean isUnix() {
         return (OS.contains("nux"));
-    }
-
-    public ScreenGrab(PushClient pushClient) {
-        this.instance = pushClient;
     }
 
     public BufferedImage getFullScreen() {
@@ -117,14 +117,14 @@ public class ScreenGrab {
             graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             Point2D start = calculateStartPoint();
             graphicsContext.clearRect(start.getX(), start.getY(), width, height);
-            captureImage();
+            capturePartialImage();
 
         });
 
 //        mainScene.setOnKeyPressed(event -> {
 //            if (width > 0 && height > 0) {
 //                if (event.getCode().toString().equals("ENTER")) {
-//                    captureImage();
+//                    capturePartialImage();
 //                }
 //            }
 //        });
@@ -141,8 +141,8 @@ public class ScreenGrab {
 
         BufferedImage gamma_cor = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
 
-        for(int i=0; i<original.getWidth(); i++) {
-            for(int j=0; j<original.getHeight(); j++) {
+        for (int i = 0; i < original.getWidth(); i++) {
+            for (int j = 0; j < original.getHeight(); j++) {
 
                 // Get pixels by R, G, B
                 alpha = new Color(original.getRGB(i, j)).getAlpha();
@@ -172,7 +172,7 @@ public class ScreenGrab {
     private int[] gamma_LUT(double gamma_new) {
         int[] gamma_LUT = new int[256];
 
-        for(int i=0; i<gamma_LUT.length; i++) {
+        for (int i = 0; i < gamma_LUT.length; i++) {
             gamma_LUT[i] = (int) (255 * (Math.pow((double) i / (double) 255, gamma_new)));
         }
 
@@ -185,8 +185,10 @@ public class ScreenGrab {
         int newPixel = 0;
         newPixel += alpha;
         newPixel = newPixel << 8;
-        newPixel += red; newPixel = newPixel << 8;
-        newPixel += green; newPixel = newPixel << 8;
+        newPixel += red;
+        newPixel = newPixel << 8;
+        newPixel += green;
+        newPixel = newPixel << 8;
         newPixel += blue;
 
         return newPixel;
@@ -195,21 +197,20 @@ public class ScreenGrab {
 
 
     private Point2D calculateStartPoint() {
-        Point2D start;
         if (begin.getX() > end.getX() && begin.getY() > end.getY()) {
-            start = new Point2D(begin.getX() - width, begin.getY() - height);
-        } else if (begin.getX() > end.getX()) {
-            start = new Point2D(begin.getX() - width, begin.getY());
-        } else if (begin.getY() > end.getY()) {
-            start = new Point2D(begin.getX(), begin.getY() - height);
-        } else {
-            start = begin;
+            return new Point2D(begin.getX() - width, begin.getY() - height);
         }
-        return start;
+        if (begin.getX() > end.getX()) {
+            return new Point2D(begin.getX() - width, begin.getY());
+        }
+        if (begin.getY() > end.getY()) {
+            return new Point2D(begin.getX(), begin.getY() - height);
+        }
+        return begin;
     }
 
 
-    private void captureImage() {
+    private void capturePartialImage() {
 
         BufferedImage capture;
 
