@@ -131,7 +131,7 @@ public class ScreenGrab {
             capture = new Robot().createScreenCapture(new Rectangle(
                     (int) start.getX() + instance.getOffset(),
                     (int) start.getY(),
-                    (int) width + instance.getOffset(),
+                    (int) width,
                     (int) height
             ));
             File imageFile = new File("image.png");
