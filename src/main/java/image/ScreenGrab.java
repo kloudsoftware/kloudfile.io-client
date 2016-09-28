@@ -25,6 +25,20 @@ public class ScreenGrab {
     private double height;
     private boolean hasSelected = false;
     private Stage stage;
+    private static String OS = System.getProperty("os.name").toLowerCase();
+
+
+    private static boolean isWindows() {
+        return (OS.contains("win"));
+    }
+
+    private static boolean isMac() {
+        return (OS.contains("mac") || OS.contains("darvin"));
+    }
+
+    private static boolean isUnix() {
+        return (OS.contains("nux"));
+    }
 
     public ScreenGrab(PushClient pushClient) {
         this.instance = pushClient;
@@ -49,12 +63,13 @@ public class ScreenGrab {
 
         stage.setX(instance.getOffset());
         stage.setY(0);
-        stage.setOpacity(.2);
+        stage.setOpacity(.1);
         stage.setTitle("Push");
         stage.setResizable(false);
-        stage.initStyle(StageStyle.UNDECORATED);
+        stage.initStyle(StageStyle.TRANSPARENT);
         final Group root = new Group();
         final Scene mainScene = new Scene(root);
+        mainScene.setFill(null);
         stage.setScene(mainScene);
 
         Rectangle2D result = new Rectangle2D.Double();
@@ -67,11 +82,12 @@ public class ScreenGrab {
 
         final Canvas canvas = new Canvas(result.getWidth(), result.getHeight());
         root.getChildren().add(canvas);
+        stage.show();
+
 
         mainScene.setOnMousePressed(event -> this.begin = new Point2D(event.getX(), event.getY()));
 
         mainScene.setOnMouseDragged(event -> {
-
             this.end = new Point2D(event.getX(), event.getY());
 
             final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
@@ -79,9 +95,9 @@ public class ScreenGrab {
             graphicsContext2D.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
             width = Math.abs(end.getX() - begin.getX());
             height = Math.abs(end.getY() - begin.getY());
+            graphicsContext2D.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
             Point2D start = calculateStartPoint();
-
 
             graphicsContext2D.setFill(javafx.scene.paint.Color.GRAY);
             graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
@@ -92,20 +108,89 @@ public class ScreenGrab {
 
         mainScene.setOnMouseReleased(event -> {
 
-            stage.setOpacity(0);
+//            stage.setOpacity(0);
+            stage.hide();
+            stage.close();
+            GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+            graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            Point2D start = calculateStartPoint();
+            graphicsContext.clearRect(start.getX(), start.getY(), width, height);
+            captureImage();
 
         });
 
-        mainScene.setOnKeyPressed(event -> {
-            if (width > 0 && height > 0) {
-                if (event.getCode().toString().equals("ENTER")) {
-                    captureImage();
-                }
-            }
-        });
+//        mainScene.setOnKeyPressed(event -> {
+//            if (width > 0 && height > 0) {
+//                if (event.getCode().toString().equals("ENTER")) {
+//                    captureImage();
+//                }
+//            }
+//        });
 
-        stage.show();
     }
+
+    private BufferedImage gammaCorrection(BufferedImage original, double gamma) {
+
+        int alpha, red, green, blue;
+        int newPixel;
+
+        double gamma_new = 1 / gamma;
+        int[] gamma_LUT = gamma_LUT(gamma_new);
+
+        BufferedImage gamma_cor = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
+
+        for(int i=0; i<original.getWidth(); i++) {
+            for(int j=0; j<original.getHeight(); j++) {
+
+                // Get pixels by R, G, B
+                alpha = new Color(original.getRGB(i, j)).getAlpha();
+                red = new Color(original.getRGB(i, j)).getRed();
+                green = new Color(original.getRGB(i, j)).getGreen();
+                blue = new Color(original.getRGB(i, j)).getBlue();
+
+                red = gamma_LUT[red];
+                green = gamma_LUT[green];
+                blue = gamma_LUT[blue];
+
+                // Return back to original format
+                newPixel = colorToRGB(alpha, red, green, blue);
+
+                // Write pixels into image
+                gamma_cor.setRGB(i, j, newPixel);
+
+            }
+
+        }
+
+        return gamma_cor;
+
+    }
+
+    // Create the gamma correction lookup table
+    private int[] gamma_LUT(double gamma_new) {
+        int[] gamma_LUT = new int[256];
+
+        for(int i=0; i<gamma_LUT.length; i++) {
+            gamma_LUT[i] = (int) (255 * (Math.pow((double) i / (double) 255, gamma_new)));
+        }
+
+        return gamma_LUT;
+    }
+
+    // Convert R, G, B, Alpha to standard 8 bit
+    private int colorToRGB(int alpha, int red, int green, int blue) {
+
+        int newPixel = 0;
+        newPixel += alpha;
+        newPixel = newPixel << 8;
+        newPixel += red; newPixel = newPixel << 8;
+        newPixel += green; newPixel = newPixel << 8;
+        newPixel += blue;
+
+        return newPixel;
+
+    }
+
 
     private Point2D calculateStartPoint() {
         Point2D start;
@@ -135,6 +220,9 @@ public class ScreenGrab {
                     (int) width,
                     (int) height
             ));
+            if (isMac()) {
+                capture = gammaCorrection(capture, 1.134);
+            }
             File imageFile = new File("image.png");
             ImageIO.write(capture, "png", imageFile);
             // TODO: 9/28/2016 Switched to saving to file for debug
