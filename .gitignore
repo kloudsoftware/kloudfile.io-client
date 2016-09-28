@@ -2,3 +2,7 @@
 .idea/
 *.class
 out/
+
+build/
+image.png
+src/.DS_Store
