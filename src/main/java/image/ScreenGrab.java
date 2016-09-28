@@ -1,5 +1,6 @@
 package image;
 
+import config.Config;
 import http.Upload;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -226,13 +227,13 @@ public class ScreenGrab {
             if (isMac()) {
                 capture = gammaCorrection(capture, 1.134);
             }
-            File imageFile = new File("image.png");
+            File imageFile = new File(System.getProperty("user.home") + "/.push/" + System.currentTimeMillis() + "screengrab.png");
             ImageIO.write(capture, "png", imageFile);
             // TODO: 9/28/2016 Switched to saving to file for debug
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             ImageIO.write(capture, "png ", os);
-            InputStream is = new ByteArrayInputStream(os.toByteArray());
-            Upload.uploadDataToServer(imageFile);
+//            InputStream is = new ByteArrayInputStream(os.toByteArray());
+            Upload.uploadDataToServer(imageFile, Config.getProperties().getProperty("url"));
         } catch (AWTException | IOException ex) {
             ex.printStackTrace();
         }

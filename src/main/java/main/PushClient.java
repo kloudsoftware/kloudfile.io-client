@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 public class PushClient extends Application {
 
     private int offset;
+
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -26,7 +28,6 @@ public class PushClient extends Application {
         PushClient pushClient = new PushClient();
         pushClient.offset = Config.queryConfig();
         System.out.println(pushClient.offset);
-
         ScreenGrab screenGrab = new ScreenGrab(pushClient);
         screenGrab.getPartOfScreen(primaryStage);
     }

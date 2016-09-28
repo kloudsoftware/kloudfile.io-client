@@ -12,6 +12,9 @@ jar {
                 'Implementation-Version': version,
                 'Main-Class': 'main.PushClient'
     }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 sourceCompatibility = 1.8
@@ -26,6 +29,4 @@ dependencies {
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
     // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpmime
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.2'
-
-
 }
