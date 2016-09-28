@@ -5,7 +5,6 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.*;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import main.PushClient;
@@ -91,7 +90,19 @@ public class ScreenGrab {
 
         });
 
-        mainScene.setOnMouseReleased(event -> captureImage());
+        mainScene.setOnMouseReleased(event -> {
+            mainScene.getWindow().hide();
+            stage.setOpacity(0);
+            stage.hide();
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            captureImage();
+        });
 
         stage.show();
     }
@@ -114,13 +125,10 @@ public class ScreenGrab {
     private void captureImage() {
         BufferedImage capture;
 
-        stage.hide();
         try {
 
             Point2D start = calculateStartPoint();
             capture = new Robot().createScreenCapture(new Rectangle(
-
-
                     (int) start.getX() + instance.getOffset(),
                     (int) start.getY(),
                     (int) width + instance.getOffset(),
