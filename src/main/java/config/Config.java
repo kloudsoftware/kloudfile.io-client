@@ -12,17 +12,17 @@ import java.util.Properties;
  */
 public class Config {
 
-    private static Properties properties;
+    private Properties properties;
 
     private static File configFile = new java.io.File(System.getProperty("user.home") + "/.push/push.properties");
     private static File configFileDir = new java.io.File(System.getProperty("user.home") + "/.push");
 
-    public static int queryConfig() {
+    public int queryConfig() {
         Properties properties = new Properties();
 //        InputStream fsin = this.getClass().getClassLoader().getResourceAsStream("push.properties");
         FileInputStream fsin = null;
         try {
-            fsin = new FileInputStream(new File("push.properties"));
+            fsin = new FileInputStream(new File(this.getClass().getClassLoader().getResource("push.properties").getFile()));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             System.out.println("push.properties not found in classpath");
@@ -42,7 +42,7 @@ public class Config {
         try {
             FileInputStream sysIn = new FileInputStream(configFile);
             properties.load(sysIn);
-            Config.properties = properties;
+            this.properties = properties;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,8 +50,8 @@ public class Config {
     }
 
 
-    public static Properties getProperties() {
-        return properties;
+    public Properties getProperties() {
+        return this.properties;
     }
 
 }

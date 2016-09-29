@@ -27,10 +27,12 @@ public class ScreenGrab {
     private double height;
     private boolean hasSelected = false;
     private Stage stage;
+    private Config config;
 
 
-    public ScreenGrab(PushClient pushClient) {
+    public ScreenGrab(PushClient pushClient, Config config) {
         this.instance = pushClient;
+        this.config = config;
     }
 
     private static boolean isWindows() {
@@ -233,7 +235,7 @@ public class ScreenGrab {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             ImageIO.write(capture, "png ", os);
 //            InputStream is = new ByteArrayInputStream(os.toByteArray());
-            Upload.uploadDataToServer(imageFile, Config.getProperties().getProperty("url"));
+            Upload.uploadDataToServer(imageFile, config.getProperties().getProperty("url"), config);
         } catch (AWTException | IOException ex) {
             ex.printStackTrace();
         }

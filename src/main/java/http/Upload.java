@@ -2,6 +2,7 @@ package http;
 
 
 import config.Config;
+import main.PushClient;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -22,9 +23,9 @@ public class Upload {
 
     public static final String POST = "/post";
 
-    public static void uploadDataToServer(File file, String target) {
+    public static void uploadDataToServer(File file, String target, Config config) {
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        String key = Config.getProperties().getProperty("key");
+        String key = config.getProperties().getProperty("key");
         HttpPost httpPost = new HttpPost(target + POST);
         StringBody keyBody = new StringBody(key, ContentType.TEXT_PLAIN);
         HttpEntity httpEntity = MultipartEntityBuilder.create().addPart("file", new FileBody(file)).addPart("key", keyBody).build();

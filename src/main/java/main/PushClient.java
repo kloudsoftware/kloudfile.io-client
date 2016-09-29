@@ -26,9 +26,10 @@ public class PushClient extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         PushClient pushClient = new PushClient();
-        pushClient.offset = Config.queryConfig();
+        Config config = new Config();
+        pushClient.offset = config.queryConfig();
         System.out.println(pushClient.offset);
-        ScreenGrab screenGrab = new ScreenGrab(pushClient);
+        ScreenGrab screenGrab = new ScreenGrab(pushClient, config);
         screenGrab.getPartOfScreen(primaryStage);
     }
 }

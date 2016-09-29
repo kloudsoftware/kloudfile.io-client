@@ -17,6 +17,14 @@ jar {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDirs "src/main/resources"
+        }
+    }
+}
+
 sourceCompatibility = 1.8
 
 repositories {
