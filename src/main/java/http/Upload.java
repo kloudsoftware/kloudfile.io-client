@@ -2,7 +2,6 @@ package http;
 
 
 import config.Config;
-import main.PushClient;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -18,14 +17,21 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
 
 public class Upload {
 
     public static final String POST = "/post";
 
-    public static void uploadDataToServer(File file, String target, Config config) throws IOException {
+    public static void uploadScreenshot(final File file, final String target, final Config config) throws IOException {
+        uploadDataToServer(file, target, config);
+        file.delete();
+    }
+
+    public static void uploadFile(final File file, final String target, final Config config) throws IOException {
+        uploadDataToServer(file, target, config);
+    }
+
+    private static void uploadDataToServer(File file, String target, Config config) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         String key = config.getProperties().getProperty("key");
         HttpPost httpPost = new HttpPost(target + POST);
@@ -43,6 +49,5 @@ public class Upload {
         } else {
             throw new IOException("Statuscode: " + response.getStatusLine().getStatusCode());
         }
-        file.delete();
     }
 }

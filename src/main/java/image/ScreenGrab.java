@@ -2,42 +2,48 @@ package image;
 
 import config.Config;
 import http.Upload;
+import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
-import javafx.scene.paint.*;
+import javafx.scene.input.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import main.PushClient;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
-import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+
+import static javafx.scene.paint.Color.*;
 
 public class ScreenGrab {
 
-    private static String OS = System.getProperty("os.name").toLowerCase();
-    private PushClient instance;
+    private static final String OS = System.getProperty("os.name").toLowerCase();
+    private final PushClient pushClientInstance;
+    private final GammaCorrector gammaCorrector;
+    private final Config config;
+    private final Stage stage;
+
+    private Canvas canvas;
     private Point2D begin;
     private Point2D end;
     private double width;
     private double height;
-    private boolean hasSelected = false;
-    private Stage stage;
-    private Config config;
-    private Canvas canvas;
 
 
-    public ScreenGrab(PushClient pushClient, Config config) {
-        this.instance = pushClient;
+    public ScreenGrab(final PushClient pushClient, final Config config, final Stage stage) {
+        this.pushClientInstance = pushClient;
         this.config = config;
+        this.stage = stage;
+        this.gammaCorrector = new GammaCorrector();
     }
 
     private static boolean isWindows() {
@@ -66,10 +72,8 @@ public class ScreenGrab {
         return capture;
     }
 
-    public void getPartOfScreen(Stage primaryStage) {
-        this.stage = primaryStage;
-
-        stage.setX(instance.getOffset());
+    public void getPartOfScreen() {
+        stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setY(0);
         stage.setOpacity(.1);
         stage.setTitle("Push");
@@ -82,6 +86,22 @@ public class ScreenGrab {
         }
         stage.setScene(mainScene);
 
+        Rectangle2D result = getScreens();
+
+        canvas = new Canvas(result.getWidth(), result.getHeight());
+        root.getChildren().add(canvas);
+        stage.show();
+
+        mainScene.setOnMousePressed(handleMousePressed());
+
+        mainScene.setOnMouseDragged(handleMouseDragged());
+
+        mainScene.setOnMouseReleased(handleMouseReleased());
+
+        mainScene.setOnKeyPressed(handleKeyboardEvent());
+    }
+
+    private Rectangle2D getScreens() {
         Rectangle2D result = new Rectangle2D.Double();
         GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
         for (GraphicsDevice gd : localGE.getScreenDevices()) {
@@ -89,36 +109,11 @@ public class ScreenGrab {
                 Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
             }
         }
+        return result;
+    }
 
-        canvas = new Canvas(result.getWidth(), result.getHeight());
-        root.getChildren().add(canvas);
-        stage.show();
-
-
-        mainScene.setOnMousePressed(event -> this.begin = new Point2D(event.getX(), event.getY()));
-
-        mainScene.setOnMouseDragged(event -> {
-            this.end = new Point2D(event.getX(), event.getY());
-
-            final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-            graphicsContext2D.setFill(new javafx.scene.paint.Color(1f, 1f, 1f, 0f));
-            graphicsContext2D.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-            width = Math.abs(end.getX() - begin.getX());
-            height = Math.abs(end.getY() - begin.getY());
-            graphicsContext2D.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
-            Point2D start = calculateStartPoint();
-
-            graphicsContext2D.setFill(javafx.scene.paint.Color.GRAY);
-            graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
-            graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
-
-
-        });
-
-        mainScene.setOnMouseReleased(event -> {
-
-//            stage.setOpacity(0);
+    private EventHandler<MouseEvent> handleMouseReleased() {
+        return event -> {
             stage.hide();
             stage.close();
             GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
@@ -126,78 +121,119 @@ public class ScreenGrab {
             Point2D start = calculateStartPoint();
             graphicsContext.clearRect(start.getX(), start.getY(), width, height);
             try {
-                capturePartialImage();
+
+                BufferedImage capture;
+
+                Point2D start1 = calculateStartPoint();
+                capture = new Robot().createScreenCapture(new Rectangle(
+                        (int) start1.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                        (int) start1.getY(),
+                        (int) width,
+                        (int) height
+                ));
+                if (isMac()) {
+                    capture = gammaCorrector.gammaCorrection(capture, 1.134);
+                }
+                File imageFile = new File(
+                        System.getProperty("user.home")
+                                + "/.push/"
+                                + System.currentTimeMillis()
+                                + "screengrab.png");
+                ImageIO.write(capture, "png", imageFile);
+                Upload.uploadScreenshot(imageFile, config.getProperties().getProperty("url"), config);
+
+                System.exit(0);
             } catch (AWTException | IOException e) {
                 showError(e.getLocalizedMessage());
             }
 
-        });
+        };
     }
 
-    private BufferedImage gammaCorrection(BufferedImage original, double gamma) {
+    private EventHandler<KeyEvent> handleKeyboardEvent() {
+        return event -> {
+            if (event.getCode().getName().equals("S")) {
+                final Group root = new Group();
+                final Scene dragDropScene = new Scene(root);
+                stage.hide();
+                stage.setScene(dragDropScene);
+                stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
+                stage.setWidth(100);
+                stage.setHeight(200);
+                stage.setY(getScreens().getHeight() / 2 - stage.getHeight());
 
-        int alpha, red, green, blue;
-        int newPixel;
+                stage.setOpacity(1);
 
-        double gamma_new = 1 / gamma;
-        int[] gamma_LUT = gamma_LUT(gamma_new);
+                stage.show();
 
-        BufferedImage gamma_cor = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
+                dragDropScene.setOnDragOver(handleDragOver());
 
-        for (int i = 0; i < original.getWidth(); i++) {
-            for (int j = 0; j < original.getHeight(); j++) {
+                // Dropping over surface
+                dragDropScene.setOnDragDropped(handleDragDropped());
 
-                // Get pixels by R, G, B
-                alpha = new Color(original.getRGB(i, j)).getAlpha();
-                red = new Color(original.getRGB(i, j)).getRed();
-                green = new Color(original.getRGB(i, j)).getGreen();
-                blue = new Color(original.getRGB(i, j)).getBlue();
-
-                red = gamma_LUT[red];
-                green = gamma_LUT[green];
-                blue = gamma_LUT[blue];
-
-                // Return back to original format
-                newPixel = colorToRGB(alpha, red, green, blue);
-
-                // Write pixels into image
-                gamma_cor.setRGB(i, j, newPixel);
-
+                dragDropScene.setFill(GREY);
             }
-
-        }
-
-        return gamma_cor;
-
+        };
     }
 
-    // Create the gamma correction lookup table
-    private int[] gamma_LUT(double gamma_new) {
-        int[] gamma_LUT = new int[256];
+    private EventHandler<DragEvent> handleDragDropped() {
+        return event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasFiles()) {
+                success = true;
+                String filePath = null;
+                for (File file:db.getFiles()) {
+                    filePath = file.getAbsolutePath();
+                    try {
+                        Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            event.setDropCompleted(success);
+            event.consume();
 
-        for (int i = 0; i < gamma_LUT.length; i++) {
-            gamma_LUT[i] = (int) (255 * (Math.pow((double) i / (double) 255, gamma_new)));
-        }
-
-        return gamma_LUT;
+            System.exit(0);
+        };
     }
 
-    // Convert R, G, B, Alpha to standard 8 bit
-    private int colorToRGB(int alpha, int red, int green, int blue) {
-
-        int newPixel = 0;
-        newPixel += alpha;
-        newPixel = newPixel << 8;
-        newPixel += red;
-        newPixel = newPixel << 8;
-        newPixel += green;
-        newPixel = newPixel << 8;
-        newPixel += blue;
-
-        return newPixel;
-
+    private EventHandler<DragEvent> handleDragOver() {
+        return event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY);
+            } else {
+                event.consume();
+            }
+        };
     }
 
+    private EventHandler<MouseEvent> handleMousePressed() {
+        return event -> this.begin = new Point2D(event.getX(), event.getY());
+    }
+
+    private EventHandler<MouseEvent> handleMouseDragged() {
+        return event -> {
+            this.end = new Point2D(event.getX(), event.getY());
+
+            final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
+            graphicsContext2D.setFill(new Color(1f, 1f, 1f, 0f));
+            graphicsContext2D.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            width = Math.abs(end.getX() - begin.getX());
+            height = Math.abs(end.getY() - begin.getY());
+            graphicsContext2D.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+            Point2D start = calculateStartPoint();
+
+            graphicsContext2D.setFill(GRAY);
+            graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
+            graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
+
+
+        };
+    }
 
     private Point2D calculateStartPoint() {
         if (begin.getX() > end.getX() && begin.getY() > end.getY()) {
@@ -212,27 +248,6 @@ public class ScreenGrab {
         return begin;
     }
 
-
-    private void capturePartialImage() throws AWTException, IOException {
-
-        BufferedImage capture;
-
-        Point2D start = calculateStartPoint();
-        capture = new Robot().createScreenCapture(new Rectangle(
-                (int) start.getX() + instance.getOffset(),
-                (int) start.getY(),
-                (int) width,
-                (int) height
-        ));
-        if (isMac()) {
-            capture = gammaCorrection(capture, 1.134);
-        }
-        File imageFile = new File(System.getProperty("user.home") + "/.push/" + System.currentTimeMillis() + "screengrab.png");
-        ImageIO.write(capture, "png", imageFile);
-        Upload.uploadDataToServer(imageFile, config.getProperties().getProperty("url"), config);
-
-        System.exit(0);
-    }
 
     private void showError(final String error) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
