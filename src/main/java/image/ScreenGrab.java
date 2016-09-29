@@ -165,6 +165,7 @@ public class ScreenGrab {
                 stage.setOpacity(1);
 
                 stage.show();
+                stage.setAlwaysOnTop(true);
 
                 dragDropScene.setOnDragOver(handleDragOver());
 
@@ -188,6 +189,7 @@ public class ScreenGrab {
                     try {
                         Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
                     } catch (IOException e) {
+                        showError(e.getLocalizedMessage());
                         e.printStackTrace();
                     }
                 }
