@@ -7,12 +7,16 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
+import javafx.scene.paint.*;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import main.PushClient;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
+import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -28,6 +32,7 @@ public class ScreenGrab {
     private boolean hasSelected = false;
     private Stage stage;
     private Config config;
+    private Canvas canvas;
 
 
     public ScreenGrab(PushClient pushClient, Config config) {
@@ -85,7 +90,7 @@ public class ScreenGrab {
             }
         }
 
-        final Canvas canvas = new Canvas(result.getWidth(), result.getHeight());
+        canvas = new Canvas(result.getWidth(), result.getHeight());
         root.getChildren().add(canvas);
         stage.show();
 
@@ -120,18 +125,13 @@ public class ScreenGrab {
             graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             Point2D start = calculateStartPoint();
             graphicsContext.clearRect(start.getX(), start.getY(), width, height);
-            capturePartialImage();
+            try {
+                capturePartialImage();
+            } catch (AWTException | IOException e) {
+                showError(e.getLocalizedMessage());
+            }
 
         });
-
-//        mainScene.setOnKeyPressed(event -> {
-//            if (width > 0 && height > 0) {
-//                if (event.getCode().toString().equals("ENTER")) {
-//                    capturePartialImage();
-//                }
-//            }
-//        });
-
     }
 
     private BufferedImage gammaCorrection(BufferedImage original, double gamma) {
@@ -213,35 +213,32 @@ public class ScreenGrab {
     }
 
 
-    private void capturePartialImage() {
+    private void capturePartialImage() throws AWTException, IOException {
 
         BufferedImage capture;
 
-        try {
-
-            Point2D start = calculateStartPoint();
-            capture = new Robot().createScreenCapture(new Rectangle(
-                    (int) start.getX() + instance.getOffset(),
-                    (int) start.getY(),
-                    (int) width,
-                    (int) height
-            ));
-            if (isMac()) {
-                capture = gammaCorrection(capture, 1.134);
-            }
-            File imageFile = new File(System.getProperty("user.home") + "/.push/" + System.currentTimeMillis() + "screengrab.png");
-            ImageIO.write(capture, "png", imageFile);
-            // TODO: 9/28/2016 Switched to saving to file for debug
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ImageIO.write(capture, "png ", os);
-//            InputStream is = new ByteArrayInputStream(os.toByteArray());
-            Upload.uploadDataToServer(imageFile, config.getProperties().getProperty("url"), config);
-        } catch (AWTException | IOException ex) {
-            ex.printStackTrace();
+        Point2D start = calculateStartPoint();
+        capture = new Robot().createScreenCapture(new Rectangle(
+                (int) start.getX() + instance.getOffset(),
+                (int) start.getY(),
+                (int) width,
+                (int) height
+        ));
+        if (isMac()) {
+            capture = gammaCorrection(capture, 1.134);
         }
+        File imageFile = new File(System.getProperty("user.home") + "/.push/" + System.currentTimeMillis() + "screengrab.png");
+        ImageIO.write(capture, "png", imageFile);
+        Upload.uploadDataToServer(imageFile, config.getProperties().getProperty("url"), config);
 
         System.exit(0);
+    }
 
+    private void showError(final String error) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("ERROR");
+        alert.setContentText(error);
 
+        alert.showAndWait();
     }
 }
