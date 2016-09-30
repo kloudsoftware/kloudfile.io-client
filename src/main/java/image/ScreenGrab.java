@@ -1,16 +1,23 @@
 package image;
 
+import com.sun.javafx.geom.BaseBounds;
+import com.sun.javafx.geom.transform.BaseTransform;
+import com.sun.javafx.jmx.MXNodeAlgorithm;
+import com.sun.javafx.jmx.MXNodeAlgorithmContext;
+import com.sun.javafx.sg.prism.NGNode;
 import config.Config;
 import http.Upload;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import main.PushClient;
@@ -23,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -123,25 +131,29 @@ public class ScreenGrab {
             stage.close();
             GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
             graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-            Point2D start = calculateStartPoint();
-            graphicsContext.clearRect(start.getX(), start.getY(), width, height);
-            try {
+            Optional<Point2D> startOptional = calculateStartPoint();
+            startOptional.ifPresent(start -> {
+                graphicsContext.clearRect(start.getX(), start.getY(), width, height);
+                try {
 
-                BufferedImage capture;
+                    if (width > 0 && height > 0) {
+                        BufferedImage capture;
 
-                Point2D start1 = calculateStartPoint();
-                capture = new Robot().createScreenCapture(new Rectangle(
-                        (int) start1.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
-                        (int) start1.getY(),
-                        (int) width,
-                        (int) height
-                ));
-                pushScreenshotToServer(capture);
+                        capture = new Robot().createScreenCapture(new Rectangle(
+                                (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                                (int) start.getY(),
+                                (int) width,
+                                (int) height
+                        ));
+                        pushScreenshotToServer(capture);
+                    }
 
-                System.exit(0);
-            } catch (AWTException | IOException e) {
-                showError(e.getLocalizedMessage());
-            }
+                    System.exit(0);
+                } catch (AWTException | IOException e) {
+                    showError(e.getLocalizedMessage());
+                }
+            });
+
 
         };
     }
@@ -182,7 +194,7 @@ public class ScreenGrab {
                 dragDropScene.setOnDragDropped(handleDragDropped());
 
                 dragDropScene.setFill(GREY);
-            } else if(event.getCode().getName().equals("F")) {
+            } else if (event.getCode().getName().equals("F")) {
                 try {
                     getFullScreen();
                     System.exit(0);
@@ -280,27 +292,30 @@ public class ScreenGrab {
             height = Math.abs(end.getY() - begin.getY());
             graphicsContext2D.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-            Point2D start = calculateStartPoint();
-
-            graphicsContext2D.setFill(GRAY);
-            graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
-            graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
-
-
+            Optional<Point2D> startOptional = calculateStartPoint();
+            startOptional.ifPresent(start -> {
+                graphicsContext2D.setFill(GRAY);
+                graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
+                graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
+            });
         };
     }
 
-    private Point2D calculateStartPoint() {
+    private Optional<Point2D> calculateStartPoint() {
+        if (end == null || begin == null) {
+            return Optional.empty();
+        }
+
         if (begin.getX() > end.getX() && begin.getY() > end.getY()) {
-            return new Point2D(begin.getX() - width, begin.getY() - height);
+            return Optional.of(new Point2D(begin.getX() - width, begin.getY() - height));
         }
         if (begin.getX() > end.getX()) {
-            return new Point2D(begin.getX() - width, begin.getY());
+            return Optional.of(new Point2D(begin.getX() - width, begin.getY()));
         }
         if (begin.getY() > end.getY()) {
-            return new Point2D(begin.getX(), begin.getY() - height);
+            return Optional.of(new Point2D(begin.getX(), begin.getY() - height));
         }
-        return begin;
+        return Optional.of(begin);
     }
 
 
