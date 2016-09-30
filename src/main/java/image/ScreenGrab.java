@@ -62,6 +62,8 @@ public class ScreenGrab {
     }
 
     private void getFullScreen() throws IOException {
+        stage.hide();
+        stage.close();
         Rectangle screenRect = new Rectangle(0, 0, 0, 0);
         for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
             screenRect = screenRect.union(gd.getDefaultConfiguration().getBounds());
@@ -147,9 +149,9 @@ public class ScreenGrab {
     }
 
     private void pushScreenshotToServer(BufferedImage capture) throws IOException {
-        if (isMac()) {
-            capture = gammaCorrector.gammaCorrection(capture, 1.15);
-        }
+//        if (isMac()) {
+//            capture = gammaCorrector.gammaCorrection(capture, 1.15);
+//        }
         File imageFile = new File(
                 System.getProperty("user.home")
                         + "/.push/"
