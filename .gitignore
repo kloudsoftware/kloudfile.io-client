@@ -3,6 +3,7 @@
 *.class
 out/
 gradle/
+.gradle/
 
 build/
 image.png

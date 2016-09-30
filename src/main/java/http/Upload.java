@@ -22,7 +22,7 @@ public class Upload {
 
     public static final String POST = "/post";
 
-    public static void uploadScreenshot(final File file, final String target, final Config config) throws IOException {
+    public static void uploadTempContent(final File file, final String target, final Config config) throws IOException {
         uploadDataToServer(file, target, config);
         file.delete();
     }
@@ -31,7 +31,7 @@ public class Upload {
         uploadDataToServer(file, target, config);
     }
 
-    private static void uploadDataToServer(File file, String target, Config config) throws IOException {
+    private static void uploadDataToServer(File file, String target, final Config config) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         String key = config.getProperties().getProperty("key");
         HttpPost httpPost = new HttpPost(target + POST);

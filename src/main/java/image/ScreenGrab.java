@@ -20,9 +20,14 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import static javafx.scene.paint.Color.*;
+import static javafx.scene.paint.Color.GRAY;
+import static javafx.scene.paint.Color.GREY;
 
 public class ScreenGrab {
 
@@ -58,7 +63,7 @@ public class ScreenGrab {
         return (OS.contains("nux"));
     }
 
-    public BufferedImage getFullScreen() {
+    public void getFullScreen() throws IOException {
         Rectangle screenRect = new Rectangle(0, 0, 0, 0);
         for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
             screenRect = screenRect.union(gd.getDefaultConfiguration().getBounds());
@@ -69,7 +74,7 @@ public class ScreenGrab {
         } catch (AWTException e) {
             e.printStackTrace();
         }
-        return capture;
+        pushScreenshotToServer(capture);
     }
 
     public void getPartOfScreen() {
@@ -81,9 +86,9 @@ public class ScreenGrab {
         stage.initStyle(StageStyle.TRANSPARENT);
         final Group root = new Group();
         final Scene mainScene = new Scene(root);
-        if (!isWindows()) {
-            mainScene.setFill(null);
-        }
+//        if (!isWindows()) {
+//            mainScene.setFill(null);
+//        }
         stage.setScene(mainScene);
 
         Rectangle2D result = getScreens();
@@ -131,16 +136,7 @@ public class ScreenGrab {
                         (int) width,
                         (int) height
                 ));
-                if (isMac()) {
-                    capture = gammaCorrector.gammaCorrection(capture, 1.134);
-                }
-                File imageFile = new File(
-                        System.getProperty("user.home")
-                                + "/.push/"
-                                + System.currentTimeMillis()
-                                + "screengrab.png");
-                ImageIO.write(capture, "png", imageFile);
-                Upload.uploadScreenshot(imageFile, config.getProperties().getProperty("url"), config);
+                pushScreenshotToServer(capture);
 
                 System.exit(0);
             } catch (AWTException | IOException e) {
@@ -148,6 +144,19 @@ public class ScreenGrab {
             }
 
         };
+    }
+
+    private void pushScreenshotToServer(BufferedImage capture) throws IOException {
+        if (isMac()) {
+            capture = gammaCorrector.gammaCorrection(capture, 1.15);
+        }
+        File imageFile = new File(
+                System.getProperty("user.home")
+                        + "/.push/"
+                        + System.currentTimeMillis()
+                        + "screengrab.png");
+        ImageIO.write(capture, "png", imageFile);
+        Upload.uploadTempContent(imageFile, config.getProperties().getProperty("url"), config);
     }
 
     private EventHandler<KeyEvent> handleKeyboardEvent() {
@@ -173,7 +182,20 @@ public class ScreenGrab {
                 dragDropScene.setOnDragDropped(handleDragDropped());
 
                 dragDropScene.setFill(GREY);
+            } else if(event.getCode().getName().equals("F")) {
+                try {
+                    getFullScreen();
+                    System.exit(0);
+                } catch (IOException e) {
+                    showError(e.getLocalizedMessage());
+                    e.printStackTrace();
+                    System.exit(0);
+                }
+            } else {
+                System.exit(0);
             }
+
+
         };
     }
 
@@ -184,12 +206,43 @@ public class ScreenGrab {
             if (db.hasFiles()) {
                 success = true;
                 String filePath = null;
-                for (File file:db.getFiles()) {
-                    filePath = file.getAbsolutePath();
-                    try {
-                        Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
+                if (db.getFiles().size() == 1) {
+                    for (File file : db.getFiles()) {
+                        filePath = file.getAbsolutePath();
+                        try {
+                            Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
+                        } catch (IOException e) {
+                            showError(e.getLocalizedMessage());
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    String path = System.getProperty("user.home")
+                            + "/.push/"
+                            + System.currentTimeMillis() + "archive.zip";
+                    try (FileOutputStream fout = new FileOutputStream(path)) {
+
+                        ZipOutputStream zout = new ZipOutputStream(fout);
+                        byte[] buffer = new byte[1024];
+
+                        for (File file : db.getFiles()) {
+                            FileInputStream fsin = new FileInputStream(file);
+                            zout.putNextEntry(new ZipEntry(file.getName()));
+
+                            int len;
+
+                            while ((len = fsin.read(buffer)) > 0) {
+                                zout.write(buffer, 0, len);
+                            }
+
+                            zout.closeEntry();
+                            fsin.close();
+                        }
+                        zout.close();
+
+                        Upload.uploadTempContent(new File(path), config.getProperties().getProperty("url"), config);
+
                     } catch (IOException e) {
-                        showError(e.getLocalizedMessage());
                         e.printStackTrace();
                     }
                 }
