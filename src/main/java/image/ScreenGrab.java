@@ -173,7 +173,7 @@ public class ScreenGrab {
 
     private EventHandler<KeyEvent> handleKeyboardEvent() {
         return event -> {
-            if (event.getCode().getName().equals("S")) {
+            if (event.getCode().getName().equals(config.getProperties().getProperty("uploadFile"))) {
                 final Group root = new Group();
                 final Scene dragDropScene = new Scene(root);
                 stage.hide();
@@ -194,7 +194,7 @@ public class ScreenGrab {
                 dragDropScene.setOnDragDropped(handleDragDropped());
 
                 dragDropScene.setFill(GREY);
-            } else if (event.getCode().getName().equals("F")) {
+            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureFullScreen"))) {
                 try {
                     getFullScreen();
                     System.exit(0);
