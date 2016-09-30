@@ -16,7 +16,7 @@ public class PushClient extends Application {
     public void start(Stage primaryStage) throws Exception {
         PushClient pushClient = new PushClient();
         Config config = new Config();
-        ScreenGrab screenGrab = new ScreenGrab(pushClient, config, primaryStage);
+        ScreenGrab screenGrab = new ScreenGrab(config, primaryStage);
 
         screenGrab.getPartOfScreen();
     }

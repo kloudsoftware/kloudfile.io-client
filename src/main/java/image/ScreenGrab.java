@@ -1,26 +1,18 @@
 package image;
 
-import com.sun.javafx.geom.BaseBounds;
-import com.sun.javafx.geom.transform.BaseTransform;
-import com.sun.javafx.jmx.MXNodeAlgorithm;
-import com.sun.javafx.jmx.MXNodeAlgorithmContext;
-import com.sun.javafx.sg.prism.NGNode;
 import config.Config;
 import http.Upload;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import main.PushClient;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -40,7 +32,6 @@ import static javafx.scene.paint.Color.GREY;
 public class ScreenGrab {
 
     private static final String OS = System.getProperty("os.name").toLowerCase();
-    private final PushClient pushClientInstance;
     private final GammaCorrector gammaCorrector;
     private final Config config;
     private final Stage stage;
@@ -52,8 +43,7 @@ public class ScreenGrab {
     private double height;
 
 
-    public ScreenGrab(final PushClient pushClient, final Config config, final Stage stage) {
-        this.pushClientInstance = pushClient;
+    public ScreenGrab(final Config config, final Stage stage) {
         this.config = config;
         this.stage = stage;
         this.gammaCorrector = new GammaCorrector();
@@ -71,7 +61,7 @@ public class ScreenGrab {
         return (OS.contains("nux"));
     }
 
-    public void getFullScreen() throws IOException {
+    private void getFullScreen() throws IOException {
         Rectangle screenRect = new Rectangle(0, 0, 0, 0);
         for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
             screenRect = screenRect.union(gd.getDefaultConfiguration().getBounds());
@@ -94,9 +84,7 @@ public class ScreenGrab {
         stage.initStyle(StageStyle.TRANSPARENT);
         final Group root = new Group();
         final Scene mainScene = new Scene(root);
-//        if (!isWindows()) {
-//            mainScene.setFill(null);
-//        }
+
         stage.setScene(mainScene);
 
         Rectangle2D result = getScreens();
@@ -190,7 +178,6 @@ public class ScreenGrab {
 
                 dragDropScene.setOnDragOver(handleDragOver());
 
-                // Dropping over surface
                 dragDropScene.setOnDragDropped(handleDragDropped());
 
                 dragDropScene.setFill(GREY);
@@ -321,7 +308,7 @@ public class ScreenGrab {
 
     private void showError(final String error) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("ERROR");
+        alert.setTitle("Error");
         alert.setContentText(error);
 
         alert.showAndWait();
