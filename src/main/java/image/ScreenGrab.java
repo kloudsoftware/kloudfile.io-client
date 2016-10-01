@@ -2,6 +2,7 @@ package image;
 
 import config.Config;
 import http.Upload;
+import image.gif.GifWriter;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -15,13 +16,15 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageOutputStream;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -192,6 +195,51 @@ public class ScreenGrab {
                     e.printStackTrace();
                     System.exit(0);
                 }
+            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureGIF"))) {
+                stage.hide();
+                stage.close();
+                Rectangle screenRect = new Rectangle(0, 0, 0, 0);
+                for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+                    screenRect = screenRect.union(gd.getDefaultConfiguration().getBounds());
+                }
+                List<BufferedImage> imageList = new ArrayList<>();
+                final Robot robot;
+                final int frameCount = 50;
+                final int timeBetweenFrames = frameCount / 4;
+
+                final File gifFile = new File("test.gif");
+
+                System.out.println("started to record gif");
+                try {
+                    robot = new Robot();
+                    for (int i = 0; i < frameCount; i++) {
+                        imageList.add(robot.createScreenCapture(screenRect));
+                        Thread.sleep(timeBetweenFrames);
+                    }
+
+                    System.out.println("start to pack gif");
+
+                    ImageOutputStream imageOut = new FileImageOutputStream(gifFile);
+                    final GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
+
+                    for (BufferedImage bufferedImage : imageList) {
+                        gifWriter.writeToSequence(bufferedImage);
+                    }
+
+                    System.out.println("finished packing gif");
+                    gifWriter.close();
+                    imageOut.close();
+
+                    // Upload.uploadTempContent(gifFile, config.getProperties().getProperty("url"), config);
+
+
+                    System.exit(0);
+
+                } catch (AWTException | IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
             } else {
                 System.exit(0);
             }
