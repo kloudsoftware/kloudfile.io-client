@@ -18,6 +18,6 @@ public class PushClient extends Application {
         Config config = new Config();
         ScreenGrab screenGrab = new ScreenGrab(config, primaryStage);
 
-        screenGrab.getPartOfScreen();
+        screenGrab.start();
     }
 }

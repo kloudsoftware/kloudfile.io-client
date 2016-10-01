@@ -67,7 +67,7 @@ public class ScreenGrab {
         return (OS.contains("nux"));
     }
 
-    private void getFullScreen() throws IOException {
+    private void makeFullscreenScreenShot() throws IOException {
         stage.hide();
         stage.close();
         Rectangle screenRect = new Rectangle(0, 0, 0, 0);
@@ -83,7 +83,7 @@ public class ScreenGrab {
         pushScreenshotToServer(capture);
     }
 
-    public void getPartOfScreen() {
+    public void start() {
         stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setY(0);
         stage.setOpacity(.1);
@@ -110,17 +110,6 @@ public class ScreenGrab {
         mainScene.setOnKeyPressed(handleKeyboardEvent());
     }
 
-    private Rectangle2D getScreens() {
-        Rectangle2D result = new Rectangle2D.Double();
-        GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        for (GraphicsDevice gd : localGE.getScreenDevices()) {
-            for (GraphicsConfiguration graphicsConfiguration : gd.getConfigurations()) {
-                Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
-            }
-        }
-        return result;
-    }
-
     private EventHandler<MouseEvent> handleMouseReleased() {
         return event -> {
             stage.hide();
@@ -129,127 +118,27 @@ public class ScreenGrab {
             graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             Optional<Point2D> startOptional = calculateStartPoint();
             startOptional.ifPresent(start -> {
+                graphicsContext.clearRect(start.getX(), start.getY(), width, height);
                 if (!wantsGif) {
-                    graphicsContext.clearRect(start.getX(), start.getY(), width, height);
                     try {
-
-                        if (width > 0 && height > 0) {
-                            BufferedImage capture;
-
-                            capture = new Robot().createScreenCapture(new Rectangle(
-                                    (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
-                                    (int) start.getY(),
-                                    (int) width,
-                                    (int) height
-                            ));
-                            pushScreenshotToServer(capture);
-                        }
-
-                        System.exit(0);
+                        makePartialScreenShot(start);
                     } catch (AWTException | IOException e) {
                         showError(e.getLocalizedMessage());
+                        System.exit(0);
                     }
                 } else {
-                    stage.hide();
-                    stage.close();
-                    final List<BufferedImage> imageList = new ArrayList<>();
-                    final Robot robot;
-                    final int frameCount = Integer.valueOf(config.getProperties().getProperty("GIFFrameCount"));
-                    final int timeBetweenFrames = Integer.valueOf(config.getProperties().getProperty("GIFTimeBetweenFrames"));
-
-                    final File gifFile = new File("test.gif");
-                    System.out.println("started to record gif");
-
-                    try (ImageOutputStream imageOut = new FileImageOutputStream(gifFile)) {
-                        robot = new Robot();
-                        for (int i = 0; i < frameCount; i++) {
-                            imageList.add(robot.createScreenCapture(new Rectangle(
-                                    (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
-                                    (int) start.getY(),
-                                    (int) width,
-                                    (int) height
-                            )));
-                            Thread.sleep(timeBetweenFrames);
-                        }
-
-                        System.out.println("start to pack gif");
-
-                        GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
-
-                        for (BufferedImage bufferedImage : imageList) {
-                            gifWriter.writeToSequence(bufferedImage);
-                        }
-
-                        System.out.println("finished packing gif");
-                        gifWriter.close();
-                        imageOut.close();
-
-                        Upload.uploadTempContent(gifFile, config.getProperties().getProperty("url"), config);
-                        System.exit(0);
-
+                    try {
+                        makePartialGif(start);
                     } catch (AWTException | IOException | InterruptedException e) {
+                        showError(e.getLocalizedMessage());
+                        System.exit(0);
                         e.printStackTrace();
                     }
                 }
             });
-
-
         };
     }
 
-    private void pushScreenshotToServer(BufferedImage capture) throws IOException {
-//        if (isMac()) {
-//            capture = gammaCorrector.gammaCorrection(capture, 1.15);
-//        }
-        File imageFile = new File(
-                System.getProperty("user.home")
-                        + "/.push/"
-                        + System.currentTimeMillis()
-                        + "screengrab.png");
-        ImageIO.write(capture, "png", imageFile);
-        Upload.uploadTempContent(imageFile, config.getProperties().getProperty("url"), config);
-    }
-
-    private EventHandler<KeyEvent> handleKeyboardEvent() {
-        return event -> {
-            if (event.getCode().getName().equals(config.getProperties().getProperty("uploadFile"))) {
-                final Group root = new Group();
-                final Scene dragDropScene = new Scene(root);
-                stage.hide();
-                stage.setScene(dragDropScene);
-                stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
-                stage.setWidth(100);
-                stage.setHeight(200);
-                stage.setY(getScreens().getHeight() / 2 - stage.getHeight());
-
-                stage.setOpacity(1);
-
-                stage.show();
-                stage.setAlwaysOnTop(true);
-
-                dragDropScene.setOnDragOver(handleDragOver());
-
-                dragDropScene.setOnDragDropped(handleDragDropped());
-
-                dragDropScene.setFill(GREY);
-            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureFullScreen"))) {
-                try {
-                    getFullScreen();
-                    System.exit(0);
-                } catch (IOException e) {
-                    showError(e.getLocalizedMessage());
-                    e.printStackTrace();
-                    System.exit(0);
-                }
-            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureGIF"))) {
-                this.wantsGif = true;
-            } else {
-                System.exit(0);
-            }
-
-
-        };
-    }
 
     private EventHandler<DragEvent> handleDragDropped() {
         return event -> {
@@ -257,44 +146,13 @@ public class ScreenGrab {
             boolean success = false;
             if (db.hasFiles()) {
                 success = true;
-                String filePath = null;
                 if (db.getFiles().size() == 1) {
-                    for (File file : db.getFiles()) {
-                        filePath = file.getAbsolutePath();
-                        try {
-                            Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
-                        } catch (IOException e) {
-                            showError(e.getLocalizedMessage());
-                            e.printStackTrace();
-                        }
-                    }
+                    uploadSingeFileFromDragBoard(db);
                 } else {
-                    String path = System.getProperty("user.home")
-                            + "/.push/"
-                            + System.currentTimeMillis() + "archive.zip";
-                    try (FileOutputStream fout = new FileOutputStream(path)) {
-
-                        ZipOutputStream zout = new ZipOutputStream(fout);
-                        byte[] buffer = new byte[1024];
-
-                        for (File file : db.getFiles()) {
-                            FileInputStream fsin = new FileInputStream(file);
-                            zout.putNextEntry(new ZipEntry(file.getName()));
-
-                            int len;
-
-                            while ((len = fsin.read(buffer)) > 0) {
-                                zout.write(buffer, 0, len);
-                            }
-
-                            zout.closeEntry();
-                            fsin.close();
-                        }
-                        zout.close();
-
-                        Upload.uploadTempContent(new File(path), config.getProperties().getProperty("url"), config);
-
+                    try {
+                        uploadMultipleFilesFromDragboard(db);
                     } catch (IOException e) {
+                        showError(e.getLocalizedMessage());
                         e.printStackTrace();
                     }
                 }
@@ -317,10 +175,6 @@ public class ScreenGrab {
         };
     }
 
-    private EventHandler<MouseEvent> handleMousePressed() {
-        return event -> this.begin = new Point2D(event.getX(), event.getY());
-    }
-
     private EventHandler<MouseEvent> handleMouseDragged() {
         return event -> {
             this.end = new Point2D(event.getX(), event.getY());
@@ -340,6 +194,96 @@ public class ScreenGrab {
             });
         };
     }
+
+
+    private EventHandler<KeyEvent> handleKeyboardEvent() {
+        return event -> {
+            if (event.getCode().getName().equals(config.getProperties().getProperty("uploadFile"))) {
+                setUpDragDropScene();
+            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureFullScreen"))) {
+                try {
+                    makeFullscreenScreenShot();
+                    System.exit(0);
+                } catch (IOException e) {
+                    showError(e.getLocalizedMessage());
+                    e.printStackTrace();
+                    System.exit(0);
+                }
+            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureGIF"))) {
+                this.wantsGif = true;
+            } else {
+                System.exit(0);
+            }
+        };
+    }
+
+    private EventHandler<MouseEvent> handleMousePressed() {
+        return event -> this.begin = new Point2D(event.getX(), event.getY());
+    }
+
+    private void setUpDragDropScene() {
+        final Group root = new Group();
+        final Scene dragDropScene = new Scene(root);
+        stage.hide();
+        stage.setScene(dragDropScene);
+        stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
+        stage.setWidth(100);
+        stage.setHeight(200);
+        stage.setY(getScreens().getHeight() / 2 - stage.getHeight());
+
+        stage.setOpacity(1);
+
+        stage.show();
+        stage.setAlwaysOnTop(true);
+
+        dragDropScene.setOnDragOver(handleDragOver());
+
+        dragDropScene.setOnDragDropped(handleDragDropped());
+
+        dragDropScene.setFill(GREY);
+    }
+
+
+    private void uploadMultipleFilesFromDragboard(Dragboard db) throws IOException {
+        String path = System.getProperty("user.home")
+                + "/.push/"
+                + System.currentTimeMillis() + "archive.zip";
+        try (FileOutputStream fout = new FileOutputStream(path)) {
+
+            ZipOutputStream zout = new ZipOutputStream(fout);
+            byte[] buffer = new byte[1024];
+
+            for (File file : db.getFiles()) {
+                FileInputStream fsin = new FileInputStream(file);
+                zout.putNextEntry(new ZipEntry(file.getName()));
+
+                int len;
+
+                while ((len = fsin.read(buffer)) > 0) {
+                    zout.write(buffer, 0, len);
+                }
+
+                zout.closeEntry();
+                fsin.close();
+            }
+            zout.close();
+
+            Upload.uploadTempContent(new File(path), config.getProperties().getProperty("url"), config);
+
+        }
+    }
+
+    private void uploadSingeFileFromDragBoard(Dragboard db) {
+        String filePath;
+        filePath = db.getFiles().get(0).getAbsolutePath();
+        try {
+            Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
+        } catch (IOException e) {
+            showError(e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+    }
+
 
     private Optional<Point2D> calculateStartPoint() {
         if (end == null || begin == null) {
@@ -366,4 +310,87 @@ public class ScreenGrab {
 
         alert.showAndWait();
     }
+
+
+    private Rectangle2D getScreens() {
+        Rectangle2D result = new Rectangle2D.Double();
+        GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        for (GraphicsDevice gd : localGE.getScreenDevices()) {
+            for (GraphicsConfiguration graphicsConfiguration : gd.getConfigurations()) {
+                Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
+            }
+        }
+        return result;
+    }
+
+    private void makePartialGif(Point2D start) throws AWTException, IOException, InterruptedException {
+        stage.hide();
+        stage.close();
+        final List<BufferedImage> imageList = new ArrayList<>();
+        final Robot robot;
+        final int frameCount = Integer.valueOf(config.getProperties().getProperty("GIFFrameCount"));
+        final int timeBetweenFrames = Integer.valueOf(config.getProperties().getProperty("GIFTimeBetweenFrames"));
+
+        final File gifFile = new File("test.gif");
+        System.out.println("started to record gif");
+
+        try (ImageOutputStream imageOut = new FileImageOutputStream(gifFile)) {
+            robot = new Robot();
+            for (int i = 0; i < frameCount; i++) {
+                imageList.add(robot.createScreenCapture(new Rectangle(
+                        (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                        (int) start.getY(),
+                        (int) width,
+                        (int) height
+                )));
+                Thread.sleep(timeBetweenFrames);
+            }
+
+            System.out.println("start to pack gif");
+
+            GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
+
+            for (BufferedImage bufferedImage : imageList) {
+                gifWriter.writeToSequence(bufferedImage);
+            }
+
+            System.out.println("finished packing gif");
+            gifWriter.close();
+            imageOut.close();
+
+            Upload.uploadTempContent(gifFile, config.getProperties().getProperty("url"), config);
+            System.exit(0);
+
+        }
+    }
+
+
+
+    private void makePartialScreenShot(Point2D start) throws AWTException, IOException {
+        if (width > 0 && height > 0) {
+            BufferedImage capture;
+
+            capture = new Robot().createScreenCapture(new Rectangle(
+                    (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                    (int) start.getY(),
+                    (int) width,
+                    (int) height
+            ));
+            pushScreenshotToServer(capture);
+        }
+
+        System.exit(0);
+    }
+
+    private void pushScreenshotToServer(BufferedImage capture) throws IOException {
+        File imageFile = new File(
+                System.getProperty("user.home")
+                        + "/.push/"
+                        + System.currentTimeMillis()
+                        + "screengrab.png");
+        ImageIO.write(capture, "png", imageFile);
+        Upload.uploadTempContent(imageFile, config.getProperties().getProperty("url"), config);
+    }
+
+
 }
