@@ -14,6 +14,7 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.FileImageOutputStream;
@@ -36,6 +37,7 @@ import static javafx.scene.paint.Color.GREY;
 
 public class ScreenGrab {
 
+    private static final Logger LOGGER = Logger.getLogger(ScreenGrab.class.getName());
     private static final String OS = System.getProperty("os.name").toLowerCase();
     private final GammaCorrector gammaCorrector;
     private final Config config;
@@ -47,6 +49,7 @@ public class ScreenGrab {
     private double width;
     private double height;
     private boolean wantsGif;
+    private boolean stopGifRecording;
 
 
     public ScreenGrab(final Config config, final Stage stage) {
@@ -112,6 +115,7 @@ public class ScreenGrab {
 
     private EventHandler<MouseEvent> handleMouseReleased() {
         return event -> {
+            LOGGER.info("Mouse released");
             stage.hide();
             stage.close();
             GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
@@ -142,6 +146,7 @@ public class ScreenGrab {
 
     private EventHandler<DragEvent> handleDragDropped() {
         return event -> {
+            LOGGER.info("file drag dropped");
             Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasFiles()) {
@@ -198,9 +203,12 @@ public class ScreenGrab {
 
     private EventHandler<KeyEvent> handleKeyboardEvent() {
         return event -> {
-            if (event.getCode().getName().equals(config.getProperties().getProperty("uploadFile"))) {
+            final String key = event.getCode().getName();
+            if (key.equals(config.getProperties().getProperty("uploadFile"))) {
+                LOGGER.info("dragDrop key pressed Key: " + key);
                 setUpDragDropScene();
-            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureFullScreen"))) {
+            } else if (key.equals(config.getProperties().getProperty("captureFullScreen"))) {
+                LOGGER.info("Fullscreen Screenshot key pressed Key: " + key);
                 try {
                     makeFullscreenScreenShot();
                     System.exit(0);
@@ -209,16 +217,24 @@ public class ScreenGrab {
                     e.printStackTrace();
                     System.exit(0);
                 }
-            } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureGIF"))) {
+            } else if (key.equals(config.getProperties().getProperty("captureGIF"))) {
+                LOGGER.info("captureGIF key pressed Key: " + key);
                 this.wantsGif = true;
+            } else if (key.equals("X")) {
+                LOGGER.info("StopGifCapture key pressed Key: " + key);
+                this.stopGifRecording = true;
             } else {
+                LOGGER.info("Some other key pressed, exited Key: " + key);
                 System.exit(0);
             }
         };
     }
 
     private EventHandler<MouseEvent> handleMousePressed() {
-        return event -> this.begin = new Point2D(event.getX(), event.getY());
+        return event -> {
+            LOGGER.info("Mouse pressed");
+            this.begin = new Point2D(event.getX(), event.getY());
+        };
     }
 
     private void setUpDragDropScene() {
@@ -304,6 +320,7 @@ public class ScreenGrab {
 
 
     private void showError(final String error) {
+        LOGGER.fatal(error);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setContentText(error);
@@ -320,33 +337,45 @@ public class ScreenGrab {
                 Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
             }
         }
+        LOGGER.info(String.format("Screensize calculated: X = %s Y = %s Width = %s Height = %s",
+                result.getX(), result.getY(), result.getWidth(), result.getHeight()));
         return result;
     }
 
     private void makePartialGif(Point2D start) throws AWTException, IOException, InterruptedException {
         stage.hide();
         stage.close();
+
+        setUpGifScene();
+
+
         final List<BufferedImage> imageList = new ArrayList<>();
         final Robot robot;
         final int frameCount = Integer.valueOf(config.getProperties().getProperty("GIFFrameCount"));
         final int timeBetweenFrames = Integer.valueOf(config.getProperties().getProperty("GIFTimeBetweenFrames"));
 
         final File gifFile = new File("test.gif");
-        System.out.println("started to record gif");
-
+        LOGGER.info("started to record gif");
+        final Rectangle rect = new Rectangle(
+                (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                (int) start.getY(),
+                (int) width,
+                (int) height
+        );
+        LOGGER.info(String.format("Size for partial gif: X = %s Y = %s Width = %s Height = %s",
+                rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
         try (ImageOutputStream imageOut = new FileImageOutputStream(gifFile)) {
             robot = new Robot();
             for (int i = 0; i < frameCount; i++) {
-                imageList.add(robot.createScreenCapture(new Rectangle(
-                        (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
-                        (int) start.getY(),
-                        (int) width,
-                        (int) height
-                )));
+                if (this.stopGifRecording) {
+                    break;
+                }
+
+                imageList.add(robot.createScreenCapture(rect));
                 Thread.sleep(timeBetweenFrames);
             }
 
-            System.out.println("start to pack gif");
+            LOGGER.info("start to pack gif");
 
             GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
 
@@ -354,7 +383,7 @@ public class ScreenGrab {
                 gifWriter.writeToSequence(bufferedImage);
             }
 
-            System.out.println("finished packing gif");
+            LOGGER.info("finished packing gif");
             gifWriter.close();
             imageOut.close();
 
@@ -364,18 +393,42 @@ public class ScreenGrab {
         }
     }
 
+    private void setUpGifScene() {
+        final Group root = new Group();
+        final Scene gifScene = new Scene(root);
+        stage.hide();
+        stage.setScene(gifScene);
+        stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
+        stage.setWidth(100);
+        stage.setHeight(200);
+        stage.setY(getScreens().getHeight() / 2 - stage.getHeight());
+
+        stage.setOpacity(1);
+
+        stage.show();
+        stage.setAlwaysOnTop(true);
+
+       // javafx.scene.control.Button button = new Button("End recoding");
+       // button.setOnMousePressed(event -> this.stopGifRecording = true);
+       // root.getChildren().add(button);
+        gifScene.setFill(GREY);
+        LOGGER.info("GIF Scene build");
+    }
 
 
     private void makePartialScreenShot(Point2D start) throws AWTException, IOException {
         if (width > 0 && height > 0) {
             BufferedImage capture;
 
-            capture = new Robot().createScreenCapture(new Rectangle(
+            final Rectangle rect = new Rectangle(
                     (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
                     (int) start.getY(),
                     (int) width,
                     (int) height
-            ));
+            );
+            capture = new Robot().createScreenCapture(rect);
+            LOGGER.info(String.format("Size for partial screenshot: X = %s Y = %s Width = %s Height = %s",
+                    rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             pushScreenshotToServer(capture);
         }
 
