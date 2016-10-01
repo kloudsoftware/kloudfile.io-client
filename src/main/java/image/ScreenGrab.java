@@ -21,9 +21,11 @@ import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -44,6 +46,7 @@ public class ScreenGrab {
     private Point2D end;
     private double width;
     private double height;
+    private boolean wantsGif;
 
 
     public ScreenGrab(final Config config, final Stage stage) {
@@ -126,24 +129,67 @@ public class ScreenGrab {
             graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             Optional<Point2D> startOptional = calculateStartPoint();
             startOptional.ifPresent(start -> {
-                graphicsContext.clearRect(start.getX(), start.getY(), width, height);
-                try {
+                if (!wantsGif) {
+                    graphicsContext.clearRect(start.getX(), start.getY(), width, height);
+                    try {
 
-                    if (width > 0 && height > 0) {
-                        BufferedImage capture;
+                        if (width > 0 && height > 0) {
+                            BufferedImage capture;
 
-                        capture = new Robot().createScreenCapture(new Rectangle(
-                                (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
-                                (int) start.getY(),
-                                (int) width,
-                                (int) height
-                        ));
-                        pushScreenshotToServer(capture);
+                            capture = new Robot().createScreenCapture(new Rectangle(
+                                    (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                                    (int) start.getY(),
+                                    (int) width,
+                                    (int) height
+                            ));
+                            pushScreenshotToServer(capture);
+                        }
+
+                        System.exit(0);
+                    } catch (AWTException | IOException e) {
+                        showError(e.getLocalizedMessage());
                     }
+                } else {
+                    stage.hide();
+                    stage.close();
+                    final List<BufferedImage> imageList = new ArrayList<>();
+                    final Robot robot;
+                    final int frameCount = Integer.valueOf(config.getProperties().getProperty("GIFFrameCount"));
+                    final int timeBetweenFrames = Integer.valueOf(config.getProperties().getProperty("GIFTimeBetweenFrames"));
 
-                    System.exit(0);
-                } catch (AWTException | IOException e) {
-                    showError(e.getLocalizedMessage());
+                    final File gifFile = new File("test.gif");
+                    System.out.println("started to record gif");
+
+                    try (ImageOutputStream imageOut = new FileImageOutputStream(gifFile)) {
+                        robot = new Robot();
+                        for (int i = 0; i < frameCount; i++) {
+                            imageList.add(robot.createScreenCapture(new Rectangle(
+                                    (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
+                                    (int) start.getY(),
+                                    (int) width,
+                                    (int) height
+                            )));
+                            Thread.sleep(timeBetweenFrames);
+                        }
+
+                        System.out.println("start to pack gif");
+
+                        GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
+
+                        for (BufferedImage bufferedImage : imageList) {
+                            gifWriter.writeToSequence(bufferedImage);
+                        }
+
+                        System.out.println("finished packing gif");
+                        gifWriter.close();
+                        imageOut.close();
+
+                        Upload.uploadTempContent(gifFile, config.getProperties().getProperty("url"), config);
+                        System.exit(0);
+
+                    } catch (AWTException | IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             });
 
@@ -196,50 +242,7 @@ public class ScreenGrab {
                     System.exit(0);
                 }
             } else if (event.getCode().getName().equals(config.getProperties().getProperty("captureGIF"))) {
-                stage.hide();
-                stage.close();
-                Rectangle screenRect = new Rectangle(0, 0, 0, 0);
-                for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
-                    screenRect = screenRect.union(gd.getDefaultConfiguration().getBounds());
-                }
-                List<BufferedImage> imageList = new ArrayList<>();
-                final Robot robot;
-                final int frameCount = 50;
-                final int timeBetweenFrames = frameCount / 4;
-
-                final File gifFile = new File("test.gif");
-
-                System.out.println("started to record gif");
-                try {
-                    robot = new Robot();
-                    for (int i = 0; i < frameCount; i++) {
-                        imageList.add(robot.createScreenCapture(screenRect));
-                        Thread.sleep(timeBetweenFrames);
-                    }
-
-                    System.out.println("start to pack gif");
-
-                    ImageOutputStream imageOut = new FileImageOutputStream(gifFile);
-                    final GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
-
-                    for (BufferedImage bufferedImage : imageList) {
-                        gifWriter.writeToSequence(bufferedImage);
-                    }
-
-                    System.out.println("finished packing gif");
-                    gifWriter.close();
-                    imageOut.close();
-
-                    // Upload.uploadTempContent(gifFile, config.getProperties().getProperty("url"), config);
-
-
-                    System.exit(0);
-
-                } catch (AWTException | IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-
+                this.wantsGif = true;
             } else {
                 System.exit(0);
             }
