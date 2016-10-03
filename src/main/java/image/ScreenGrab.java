@@ -39,7 +39,6 @@ public class ScreenGrab {
 
     private static final Logger LOGGER = Logger.getLogger(ScreenGrab.class.getName());
     private static final String OS = System.getProperty("os.name").toLowerCase();
-    private final GammaCorrector gammaCorrector;
     private final Config config;
     private final Stage stage;
 
@@ -49,13 +48,11 @@ public class ScreenGrab {
     private double width;
     private double height;
     private boolean wantsGif;
-    private boolean stopGifRecording;
 
 
     public ScreenGrab(final Config config, final Stage stage) {
         this.config = config;
         this.stage = stage;
-        this.gammaCorrector = new GammaCorrector();
     }
 
     private static boolean isWindows() {
@@ -220,9 +217,6 @@ public class ScreenGrab {
             } else if (key.equals(config.getProperties().getProperty("captureGIF"))) {
                 LOGGER.info("captureGIF key pressed Key: " + key);
                 this.wantsGif = true;
-            } else if (key.equals("X")) {
-                LOGGER.info("StopGifCapture key pressed Key: " + key);
-                this.stopGifRecording = true;
             } else {
                 LOGGER.info("Some other key pressed, exited Key: " + key);
                 System.exit(0);
@@ -346,9 +340,6 @@ public class ScreenGrab {
         stage.hide();
         stage.close();
 
-        setUpGifScene();
-
-
         final List<BufferedImage> imageList = new ArrayList<>();
         final Robot robot;
         final int frameCount = Integer.valueOf(config.getProperties().getProperty("GIFFrameCount"));
@@ -367,10 +358,6 @@ public class ScreenGrab {
         try (ImageOutputStream imageOut = new FileImageOutputStream(gifFile)) {
             robot = new Robot();
             for (int i = 0; i < frameCount; i++) {
-                if (this.stopGifRecording) {
-                    break;
-                }
-
                 imageList.add(robot.createScreenCapture(rect));
                 Thread.sleep(timeBetweenFrames);
             }
@@ -392,29 +379,6 @@ public class ScreenGrab {
 
         }
     }
-
-    private void setUpGifScene() {
-        final Group root = new Group();
-        final Scene gifScene = new Scene(root);
-        stage.hide();
-        stage.setScene(gifScene);
-        stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
-        stage.setWidth(100);
-        stage.setHeight(200);
-        stage.setY(getScreens().getHeight() / 2 - stage.getHeight());
-
-        stage.setOpacity(1);
-
-        stage.show();
-        stage.setAlwaysOnTop(true);
-
-       // javafx.scene.control.Button button = new Button("End recoding");
-       // button.setOnMousePressed(event -> this.stopGifRecording = true);
-       // root.getChildren().add(button);
-        gifScene.setFill(GREY);
-        LOGGER.info("GIF Scene build");
-    }
-
 
     private void makePartialScreenShot(Point2D start) throws AWTException, IOException {
         if (width > 0 && height > 0) {
