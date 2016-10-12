@@ -28,4 +28,8 @@ public class ComponentContainer {
     public IComponent getActiveComponent() {
         return activeComponent;
     }
+
+    public void setActiveComponent(IComponent activeComponent) {
+        this.activeComponent = activeComponent;
+    }
 }

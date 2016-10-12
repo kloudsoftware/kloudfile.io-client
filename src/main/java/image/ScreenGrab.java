@@ -2,19 +2,19 @@ package image;
 
 import components.ComponentContainer;
 import config.Config;
-import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
-import javafx.scene.input.DragEvent;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.log4j.Logger;
+import scene.ScreenShotScene;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
 
 import static javafx.scene.paint.Color.GREY;
 
@@ -31,53 +31,34 @@ public class ScreenGrab {
 
     private double width, height;
 
-    private ComponentContainer componentContainer = new ComponentContainer();
+    private ComponentContainer componentContainer;
 
     public ScreenGrab(final Config config, final Stage stage) {
         this.config = config;
         this.stage = stage;
+        componentContainer = new ComponentContainer();
     }
 
     public void start() {
+        sceneMap = new HashMap<>();
+        sceneMap.put(ScreenShotScene.class, new ScreenShotScene(root, config, stage));
+        activeScene = (sceneMap.get(ScreenShotScene.class));
+
         stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setY(0);
         stage.setOpacity(.1);
         stage.setTitle("Push");
         stage.setResizable(false);
         stage.initStyle(StageStyle.TRANSPARENT);
-        final Group root = new Group();
         final Scene mainScene = new Scene(root);
 
         stage.setScene(mainScene);
-        Rectangle2D screens = getScreens();
-        canvas = new Canvas(screens.getWidth(), screens.getHeight());
+        Canvas canvas = new Canvas(screens.getWidth(), screens.getHeight());
         root.getChildren().add(canvas);
         stage.show();
 
-        mainScene.setOnMousePressed(event -> componentContainer.getActiveComponent().handleMousePressed(event));
-
-        mainScene.setOnMouseDragged(event -> componentContainer.getActiveComponent().handleMouseDragged(event));
-
-        mainScene.setOnMouseReleased(event -> componentContainer.getActiveComponent().handleMouseReleased(event));
-
-        mainScene.setOnKeyPressed(event -> componentContainer.getActiveComponent().handleKeyPressed(event));
-
-        mainScene.setOnDragDropped(event -> componentContainer.getActiveComponent().handleDragDropped(event));
-
-        mainScene.setOnDragOver(event -> componentContainer.getActiveComponent().handleDragOver(event));
     }
 
-
-    private EventHandler<DragEvent> handleDragDropped() {
-        return event -> {
-
-        };
-    }
-
-    private EventHandler<DragEvent> handleDragOver() {
-        return event -> {
-        };
-    }
 
     private void setUpDragDropScene() {
         final Group root = new Group();
@@ -94,10 +75,8 @@ public class ScreenGrab {
         stage.show();
         stage.setAlwaysOnTop(true);
 
-        dragDropScene.setOnDragOver(handleDragOver());
 
-        dragDropScene.setOnDragDropped(handleDragDropped());
-
+        Scene s = new ScreenShotScene(root, config, stage);
         dragDropScene.setFill(GREY);
     }
 
