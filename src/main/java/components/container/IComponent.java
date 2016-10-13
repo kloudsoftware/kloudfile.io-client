@@ -1,4 +1,4 @@
-package components;
+package components.container;
 
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;

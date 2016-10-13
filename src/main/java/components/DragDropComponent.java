@@ -1,5 +1,6 @@
 package components;
 
+import components.container.IComponent;
 import config.Config;
 import http.Upload;
 import javafx.scene.input.*;

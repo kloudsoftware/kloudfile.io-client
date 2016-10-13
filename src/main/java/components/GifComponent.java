@@ -1,5 +1,6 @@
 package components;
 
+import components.container.IComponent;
 import config.Config;
 import helper.ScreenHelper;
 import http.Upload;

@@ -1,19 +1,17 @@
 package components;
 
+import components.container.IComponent;
 import config.Config;
+import helper.ScreenHelper;
 import http.Upload;
 import image.GammaCorrector;
-import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.apache.log4j.Logger;
 
 import javax.imageio.ImageIO;
@@ -61,7 +59,7 @@ public class ScreenShotComponent implements IComponent {
         stage.close();
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        Optional<Point2D> startOptional = calculateStartPoint();
+        Optional<Point2D> startOptional = ScreenHelper.calculateStartPoint(begin,end,width,height);
         startOptional.ifPresent(start -> {
             graphicsContext.clearRect(start.getX(), start.getY(), width, height);
 
@@ -107,7 +105,7 @@ public class ScreenShotComponent implements IComponent {
         height = Math.abs(end.getY() - begin.getY());
         graphicsContext2D.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        Optional<Point2D> startOptional = calculateStartPoint();
+        Optional<Point2D> startOptional = ScreenHelper.calculateStartPoint(begin,end,width,height);
         startOptional.ifPresent(start -> {
             graphicsContext2D.setFill(GRAY);
             graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);

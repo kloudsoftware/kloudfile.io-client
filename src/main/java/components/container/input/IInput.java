@@ -1,5 +1,6 @@
-package input;
+package components.container.input;
 
+import components.container.IComponent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -8,6 +9,11 @@ import javafx.scene.input.MouseEvent;
  * Created by fr3d63 on 12/10/16.
  */
 public interface IInput {
+
+    void register(final IComponent component);
+
+    void unregister(final IComponent component);
+
     void handleMouseReleased(MouseEvent event);
 
     void handleKeyPressed(KeyEvent event);
@@ -19,5 +25,6 @@ public interface IInput {
     void handleDragDropped(DragEvent event);
 
     void handleDragOver(DragEvent event);
+
 
 }
