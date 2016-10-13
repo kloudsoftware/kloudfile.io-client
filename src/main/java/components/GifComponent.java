@@ -1,11 +1,14 @@
 package components;
 
 import components.container.IComponent;
+import components.container.scene.SceneManager;
+import components.container.scene.ScreenShotScene;
 import config.Config;
 import helper.ScreenHelper;
 import http.Upload;
 import image.gif.GifWriter;
 import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.DragEvent;
@@ -35,16 +38,18 @@ public class GifComponent implements IComponent {
     private final Stage stage;
     private final Config config;
     private final Rectangle2D screens;
+    private final SceneManager sceneManager;
     private Canvas canvas;
 
     private Point2D begin, end;
 
     private double width, height;
 
-    public GifComponent(Stage stage, Config config, Rectangle2D screens) {
+    public GifComponent(Stage stage, Config config, Rectangle2D screens, SceneManager sceneManager) {
         this.stage = stage;
         this.config = config;
         this.screens = screens;
+        this.sceneManager = sceneManager;
     }
 
 
@@ -167,5 +172,10 @@ public class GifComponent implements IComponent {
     @Override
     public void handleDragOver(DragEvent event) {
 
+    }
+
+    @Override
+    public Scene getScene() {
+        return sceneManager.getScene(ScreenShotScene.class);
     }
 }

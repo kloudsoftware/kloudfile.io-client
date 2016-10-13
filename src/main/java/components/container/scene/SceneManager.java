@@ -23,7 +23,7 @@ public class SceneManager {
     private final Map<Class<? extends IScene>, Scene> sceneMap;
     private Scene activeScene;
 
-    public SceneManager(Config config, Stage stage, Rectangle2D screens) {
+    public SceneManager(Config config, Stage stage) {
 
         stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setY(0);
@@ -31,16 +31,15 @@ public class SceneManager {
         stage.setTitle("Push");
         stage.setResizable(false);
         stage.initStyle(StageStyle.TRANSPARENT);
-        final Group root = new Group();
-        final Scene mainScene = new Scene(root);
+        final ScreenShotScene screenShotScene = new ScreenShotScene(config, stage, getScreens());
+        final Scene mainScene = screenShotScene.build();
 
         stage.setScene(mainScene);
-        Canvas canvas = new Canvas(screens.getWidth(), screens.getHeight());
-        root.getChildren().add(canvas);
+
         stage.show();
 
         sceneMap = new HashMap<>();
-        sceneMap.put(ScreenShotScene.class, new ScreenShotScene(root, config, stage));
+        sceneMap.put(ScreenShotScene.class, mainScene);
         activeScene = (sceneMap.get(ScreenShotScene.class));
 
     }
@@ -73,6 +72,10 @@ public class SceneManager {
         LOGGER.info(String.format("Screensize calculated: X = %s Y = %s Width = %s Height = %s",
                 result.getX(), result.getY(), result.getWidth(), result.getHeight()));
         return result;
+    }
+
+    public Scene getScene(final Class<? extends IScene> key) {
+        return sceneMap.get(key);
     }
 
 }

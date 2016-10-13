@@ -1,5 +1,6 @@
 package components.container;
 
+import javafx.scene.Scene;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -20,4 +21,6 @@ public interface IComponent {
     void handleDragDropped(DragEvent event);
 
     void handleDragOver(DragEvent event);
+
+    Scene getScene();
 }

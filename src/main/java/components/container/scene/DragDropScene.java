@@ -11,16 +11,13 @@ import static javafx.scene.paint.Color.GREY;
 /**
  * Created by fr3d63 on 11/10/16.
  */
-public class DragDropScene extends Scene implements IScene {
+public class DragDropScene implements IScene {
 
-    private final Parent root;
     private final Config config;
     private final Stage stage;
     private final SceneManager sceneManager;
 
-    public DragDropScene(Parent root, Config config, Stage stage, SceneManager sceneManager) {
-        super(root);
-        this.root = root;
+    public DragDropScene(Config config, Stage stage, SceneManager sceneManager) {
         this.config = config;
         this.stage = stage;
         this.sceneManager = sceneManager;
@@ -43,9 +40,8 @@ public class DragDropScene extends Scene implements IScene {
         stage.setAlwaysOnTop(true);
 
 
-        Scene s = new ScreenShotScene(root, config, stage);
         dragDropScene.setFill(GREY);
 
-        return this;
+        return dragDropScene;
     }
 }

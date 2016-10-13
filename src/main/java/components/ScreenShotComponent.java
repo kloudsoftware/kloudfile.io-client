@@ -1,11 +1,14 @@
 package components;
 
 import components.container.IComponent;
+import components.container.scene.SceneManager;
+import components.container.scene.ScreenShotScene;
 import config.Config;
 import helper.ScreenHelper;
 import http.Upload;
 import image.GammaCorrector;
 import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.DragEvent;
@@ -39,11 +42,13 @@ public class ScreenShotComponent implements IComponent {
     private double width;
     private double height;
     private final GammaCorrector gammaCorrector = new GammaCorrector();
+    private final SceneManager sceneManager;
 
-    public ScreenShotComponent(Stage stage, Config config, Rectangle2D screens) {
+    public ScreenShotComponent(Stage stage, Config config, Rectangle2D screens, SceneManager sceneManager) {
         this.stage = stage;
         this.config = config;
         this.screens = screens;
+        this.sceneManager = sceneManager;
     }
 
     private static final String OS = System.getProperty("os.name").toLowerCase();
@@ -179,5 +184,11 @@ public class ScreenShotComponent implements IComponent {
         }
         pushScreenshotToServer(capture);
     }
+
+    @Override
+    public Scene getScene() {
+        return sceneManager.getScene(ScreenShotScene.class);
+    }
+
 
 }

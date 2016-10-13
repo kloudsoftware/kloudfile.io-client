@@ -1,8 +1,11 @@
 package components;
 
 import components.container.IComponent;
+import components.container.scene.DragDropScene;
+import components.container.scene.SceneManager;
 import config.Config;
 import http.Upload;
+import javafx.scene.Scene;
 import javafx.scene.input.*;
 import org.apache.log4j.Logger;
 
@@ -20,9 +23,11 @@ public class DragDropComponent implements IComponent {
     private static final Logger LOGGER = Logger.getLogger(DragDropComponent.class.getName());
 
     private final Config config;
+    private final SceneManager sceneManager;
 
-    public DragDropComponent(Config config) {
+    public DragDropComponent(Config config, SceneManager sceneManager) {
         this.config = config;
+        this.sceneManager = sceneManager;
     }
 
     @Override
@@ -78,6 +83,11 @@ public class DragDropComponent implements IComponent {
             event.consume();
         }
 
+    }
+
+    @Override
+    public Scene getScene() {
+        return sceneManager.getScene(DragDropScene.class);
     }
 
     private void uploadMultipleFilesFromDragboard(Dragboard db) throws IOException {

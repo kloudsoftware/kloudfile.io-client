@@ -1,14 +1,11 @@
 package image;
 
 import components.container.ComponentContainer;
+import components.container.input.InputManager;
+import components.container.scene.SceneManager;
 import config.Config;
-import javafx.geometry.Point2D;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.apache.log4j.Logger;
 
 public class ScreenGrab {
@@ -16,13 +13,16 @@ public class ScreenGrab {
     private static final Logger LOGGER = Logger.getLogger(ScreenGrab.class.getName());
     private final Config config;
     private final Stage stage;
-
-    private ComponentContainer componentContainer;
+    private final SceneManager sceneManager;
+    private final InputManager inputManager;
+    private final ComponentContainer componentContainer;
 
     public ScreenGrab(final Config config, final Stage stage) {
         this.config = config;
         this.stage = stage;
         componentContainer = new ComponentContainer();
+        inputManager = new InputManager();
+        sceneManager = new SceneManager(config, stage);
     }
 
     public void start() {
