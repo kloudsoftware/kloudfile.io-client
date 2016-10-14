@@ -1,6 +1,7 @@
 package components.container.scene;
 
 import config.Config;
+import helper.ScreenHelper;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -31,7 +32,7 @@ public class SceneManager {
         stage.setTitle("Push");
         stage.setResizable(false);
         stage.initStyle(StageStyle.TRANSPARENT);
-        final ScreenShotScene screenShotScene = new ScreenShotScene(config, stage, getScreens());
+        final ScreenShotScene screenShotScene = new ScreenShotScene(config, stage, ScreenHelper.getScreens());
         final Scene mainScene = screenShotScene.build();
 
         stage.setScene(mainScene);
@@ -61,18 +62,7 @@ public class SceneManager {
         setActiveScene(nextScene);
     }
 
-    public Rectangle2D getScreens() {
-        Rectangle2D result = new Rectangle2D.Double();
-        GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        for (GraphicsDevice gd : localGE.getScreenDevices()) {
-            for (GraphicsConfiguration graphicsConfiguration : gd.getConfigurations()) {
-                Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
-            }
-        }
-        LOGGER.info(String.format("Screensize calculated: X = %s Y = %s Width = %s Height = %s",
-                result.getX(), result.getY(), result.getWidth(), result.getHeight()));
-        return result;
-    }
+
 
     public Scene getScene(final Class<? extends IScene> key) {
         return sceneMap.get(key);

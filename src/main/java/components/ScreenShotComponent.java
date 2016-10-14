@@ -1,6 +1,7 @@
 package components;
 
 import components.container.IComponent;
+import components.container.input.InputType;
 import components.container.scene.SceneManager;
 import components.container.scene.ScreenShotScene;
 import config.Config;
@@ -11,7 +12,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
@@ -57,8 +57,7 @@ public class ScreenShotComponent implements IComponent {
         return (OS.contains("mac") || OS.contains("darvin"));
     }
 
-    @Override
-    public void handleMouseReleased(MouseEvent event) {
+    private void handleMouseReleased(MouseEvent event) {
         LOGGER.info("Mouse released");
         stage.hide();
         stage.close();
@@ -78,8 +77,7 @@ public class ScreenShotComponent implements IComponent {
 
     }
 
-    @Override
-    public void handleKeyPressed(KeyEvent event) {
+    private void handleKeyPressed(KeyEvent event) {
         final String key = event.getCode().getName();
 
         if (key.equals(config.getProperties().getProperty("captureFullScreen"))) {
@@ -99,8 +97,7 @@ public class ScreenShotComponent implements IComponent {
 
     }
 
-    @Override
-    public void handleMouseDragged(MouseEvent event) {
+    private void handleMouseDragged(MouseEvent event) {
         this.end = new Point2D(event.getX(), event.getY());
 
         final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
@@ -119,20 +116,9 @@ public class ScreenShotComponent implements IComponent {
 
     }
 
-    @Override
-    public void handleMousePressed(MouseEvent event) {
+    private void handleMousePressed(MouseEvent event) {
         LOGGER.info("Mouse pressed");
         this.begin = new Point2D(event.getX(), event.getY());
-    }
-
-    @Override
-    public void handleDragDropped(DragEvent event) {
-
-    }
-
-    @Override
-    public void handleDragOver(DragEvent event) {
-
     }
 
     private void makePartialScreenShot(Point2D start) throws AWTException, IOException {
@@ -191,4 +177,20 @@ public class ScreenShotComponent implements IComponent {
     }
 
 
+    @Override
+    public void handle(InputType inputType, javafx.event.Event event) {
+        switch (inputType) {
+            case MOUSE_PRESSED:
+                this.handleMousePressed(((MouseEvent) event));
+                break;
+            case MOUSE_RELEASED:
+                this.handleMouseReleased(((MouseEvent) event));
+                break;
+            case MOUSE_DRAGGED:
+                this.handleMouseDragged(((MouseEvent) event));
+                break;
+            case KEY_PRESSED:
+                this.handleKeyPressed(((KeyEvent) event));
+        }
+    }
 }

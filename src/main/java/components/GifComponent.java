@@ -1,12 +1,15 @@
 package components;
 
 import components.container.IComponent;
+import components.container.input.InputType;
 import components.container.scene.SceneManager;
 import components.container.scene.ScreenShotScene;
 import config.Config;
 import helper.ScreenHelper;
 import http.Upload;
 import image.gif.GifWriter;
+import javafx.event.*;
+import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -97,8 +100,7 @@ public class GifComponent implements IComponent {
         }
     }
 
-    @Override
-    public void handleMouseReleased(MouseEvent event) {
+    private void handleMouseReleased(MouseEvent event) {
         LOGGER.info("Mouse released");
         stage.hide();
         stage.close();
@@ -120,8 +122,7 @@ public class GifComponent implements IComponent {
     }
 
 
-    @Override
-    public void handleKeyPressed(KeyEvent event) {
+    private void handleKeyPressed(KeyEvent event) {
         final String key = event.getCode().getName();
 
         if (key.equals(config.getProperties().getProperty("captureGIF"))) {
@@ -138,8 +139,7 @@ public class GifComponent implements IComponent {
 
     }
 
-    @Override
-    public void handleMouseDragged(MouseEvent event) {
+    private void handleMouseDragged(MouseEvent event) {
         this.end = new Point2D(event.getX(), event.getY());
 
         final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
@@ -158,24 +158,31 @@ public class GifComponent implements IComponent {
 
     }
 
-    @Override
-    public void handleMousePressed(MouseEvent event) {
+    private void handleMousePressed(MouseEvent event) {
         LOGGER.info("Mouse pressed");
         this.begin = new Point2D(event.getX(), event.getY());
     }
 
-    @Override
-    public void handleDragDropped(DragEvent event) {
-
-    }
-
-    @Override
-    public void handleDragOver(DragEvent event) {
-
-    }
 
     @Override
     public Scene getScene() {
         return sceneManager.getScene(ScreenShotScene.class);
+    }
+
+    @Override
+    public void handle(InputType inputType, Event event) {
+        switch (inputType) {
+            case MOUSE_PRESSED:
+                this.handleMousePressed(((MouseEvent) event));
+                break;
+            case MOUSE_RELEASED:
+                this.handleMouseReleased(((MouseEvent) event));
+                break;
+            case MOUSE_DRAGGED:
+                this.handleMouseDragged(((MouseEvent) event));
+                break;
+            case KEY_PRESSED:
+                this.handleKeyPressed(((KeyEvent) event));
+        }
     }
 }

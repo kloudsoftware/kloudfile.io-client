@@ -1,14 +1,19 @@
 package components;
 
+import com.sun.org.apache.bcel.internal.generic.BREAKPOINT;
 import components.container.IComponent;
+import components.container.input.InputType;
 import components.container.scene.DragDropScene;
 import components.container.scene.SceneManager;
 import config.Config;
 import http.Upload;
+import javafx.event.*;
+import javafx.event.Event;
 import javafx.scene.Scene;
 import javafx.scene.input.*;
 import org.apache.log4j.Logger;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,27 +35,6 @@ public class DragDropComponent implements IComponent {
         this.sceneManager = sceneManager;
     }
 
-    @Override
-    public void handleMouseReleased(MouseEvent event) {
-
-    }
-
-    @Override
-    public void handleKeyPressed(KeyEvent event) {
-
-    }
-
-    @Override
-    public void handleMouseDragged(MouseEvent event) {
-
-    }
-
-    @Override
-    public void handleMousePressed(MouseEvent event) {
-
-    }
-
-    @Override
     public void handleDragDropped(DragEvent event) {
         LOGGER.info("file drag dropped");
         Dragboard db = event.getDragboard();
@@ -74,8 +58,7 @@ public class DragDropComponent implements IComponent {
         System.exit(0);
     }
 
-    @Override
-    public void handleDragOver(DragEvent event) {
+    private void handleDragOver(DragEvent event) {
         Dragboard db = event.getDragboard();
         if (db.hasFiles()) {
             event.acceptTransferModes(TransferMode.COPY);
@@ -88,6 +71,19 @@ public class DragDropComponent implements IComponent {
     @Override
     public Scene getScene() {
         return sceneManager.getScene(DragDropScene.class);
+    }
+
+    @Override
+    public void handle(final InputType inputType, final Event event) {
+
+        switch (inputType) {
+            case DRAG_OVER:
+                this.handleDragOver(((DragEvent) event));
+                break;
+            case DRAG_DROPPED:
+                this.handleDragDropped(((DragEvent) event));
+                break;
+        }
     }
 
     private void uploadMultipleFilesFromDragboard(Dragboard db) throws IOException {

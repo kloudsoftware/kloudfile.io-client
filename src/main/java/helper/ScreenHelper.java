@@ -2,6 +2,8 @@ package helper;
 
 import javafx.geometry.Point2D;
 
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.util.Optional;
 
 /**
@@ -33,5 +35,18 @@ public class ScreenHelper {
             return Optional.of(new Point2D(begin.getX(), begin.getY() - height));
         }
         return Optional.of(begin);
+    }
+
+    public static Rectangle2D getScreens() {
+        Rectangle2D result = new Rectangle2D.Double();
+        GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        for (GraphicsDevice gd : localGE.getScreenDevices()) {
+            for (GraphicsConfiguration graphicsConfiguration : gd.getConfigurations()) {
+                Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
+            }
+        }
+        // LOGGER.info(String.format("Screensize calculated: X = %s Y = %s Width = %s Height = %s",
+                //result.getX(), result.getY(), result.getWidth(), result.getHeight()));
+        return result;
     }
 }
