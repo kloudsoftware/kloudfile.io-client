@@ -1,5 +1,7 @@
 package components.container.scene;
 
+import components.container.input.InputManager;
+import components.container.input.InputType;
 import config.Config;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -18,11 +20,13 @@ public class ScreenShotScene implements IScene {
     private final Config config;
     private final Stage stage;
     private final Rectangle2D screens;
+    private final InputManager inputManager;
 
-    public ScreenShotScene(Config config, Stage stage, Rectangle2D screens) {
+    public ScreenShotScene(Config config, Stage stage, Rectangle2D screens, InputManager inputManager) {
         this.config = config;
         this.stage = stage;
         this.screens = screens;
+        this.inputManager = inputManager;
     }
 
     @Override
@@ -33,6 +37,10 @@ public class ScreenShotScene implements IScene {
         root.getChildren().add(canvas);
         canvas.getGraphicsContext2D().setFill(Color.RED);
         canvas.getGraphicsContext2D().fillRect(0,0,100,100);
+
+        scene.setOnKeyPressed(event -> {
+            inputManager.forEach(InputType.KEY_PRESSED, event);
+        });
         return scene;
     }
 }

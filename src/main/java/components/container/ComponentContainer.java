@@ -1,6 +1,6 @@
 package components.container;
 
-import components.container.input.InputManagerManager;
+import components.container.input.InputManager;
 import components.container.input.InputType;
 
 import java.util.HashMap;
@@ -12,17 +12,17 @@ import java.util.Map;
 public class ComponentContainer {
 
     private final Map<Class<? extends IComponent>, IComponent> componentMap;
-    private final InputManagerManager inputManager;
+    private final InputManager inputManager;
     private IComponent activeComponent;
 
     public ComponentContainer() {
         this.componentMap = new HashMap<>();
-        inputManager = new InputManagerManager();
+        inputManager = new InputManager();
     }
 
     public void add(final IComponent component, final InputType[] inputTypes) {
             componentMap.put(component.getClass(), component);
-            inputManager.register(component);
+            inputManager.register(component, InputType.KEY_PRESSED);
     }
 
     public IComponent get(final Class<? extends IComponent> key) {

@@ -1,19 +1,18 @@
 package components;
 
-import com.sun.org.apache.bcel.internal.generic.BREAKPOINT;
 import components.container.IComponent;
 import components.container.input.InputType;
 import components.container.scene.DragDropScene;
 import components.container.scene.SceneManager;
 import config.Config;
 import http.Upload;
-import javafx.event.*;
 import javafx.event.Event;
 import javafx.scene.Scene;
-import javafx.scene.input.*;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import org.apache.log4j.Logger;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

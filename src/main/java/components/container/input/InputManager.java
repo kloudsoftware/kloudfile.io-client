@@ -8,11 +8,11 @@ import java.util.*;
 /**
  * Created by fr3d63 on 13/10/16.
  */
-public class InputManagerManager implements IInputManager {
+public class InputManager implements IInputManager {
 
     private final Map<InputType, Set<IComponent>> typeSetMap;
 
-    public InputManagerManager() {
+    public InputManager() {
         typeSetMap = new HashMap<>();
     }
 

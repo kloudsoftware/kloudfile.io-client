@@ -1,17 +1,13 @@
 package components.container.scene;
 
+import components.container.input.InputManager;
 import config.Config;
 import helper.ScreenHelper;
-import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.log4j.Logger;
 
-import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,9 +18,11 @@ public class SceneManager {
 
     public static final Logger LOGGER = Logger.getLogger(SceneManager.class);
     private final Map<Class<? extends IScene>, Scene> sceneMap;
+    private final InputManager inputManager;
     private Scene activeScene;
 
-    public SceneManager(Config config, Stage stage) {
+    public SceneManager(Config config, Stage stage, InputManager inputManager) {
+        this.inputManager = inputManager;
 
         stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setY(0);
@@ -32,7 +30,7 @@ public class SceneManager {
         stage.setTitle("Push");
         stage.setResizable(false);
         stage.initStyle(StageStyle.TRANSPARENT);
-        final ScreenShotScene screenShotScene = new ScreenShotScene(config, stage, ScreenHelper.getScreens());
+        final ScreenShotScene screenShotScene = new ScreenShotScene(config, stage, ScreenHelper.getScreens(), inputManager);
         final Scene mainScene = screenShotScene.build();
 
         stage.setScene(mainScene);

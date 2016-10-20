@@ -1,6 +1,7 @@
 package components.container.scene;
 
 import config.Config;
+import helper.ScreenHelper;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -32,7 +33,7 @@ public class DragDropScene implements IScene {
         stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setWidth(100);
         stage.setHeight(200);
-        stage.setY(sceneManager.getScreens().getHeight() / 2 - stage.getHeight());
+        stage.setY(ScreenHelper.getScreens().getHeight() / 2 - stage.getHeight());
 
         stage.setOpacity(1);
 
