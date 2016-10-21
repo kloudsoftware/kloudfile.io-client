@@ -23,8 +23,8 @@ public class ScreenGrab {
     public ScreenGrab(final Config config, final Stage stage) {
         this.config = config;
         this.stage = stage;
-        componentContainer = new ComponentContainer();
         inputManager = new InputManager();
+        componentContainer = new ComponentContainer(inputManager);
         sceneManager = new SceneManager(config, stage, inputManager);
         componentContainer.add(new ScreenShotComponent(stage, config, ScreenHelper.getScreens(), sceneManager), new InputType[]{InputType.KEY_PRESSED});
     }

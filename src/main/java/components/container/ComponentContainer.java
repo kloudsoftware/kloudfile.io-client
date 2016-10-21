@@ -15,9 +15,9 @@ public class ComponentContainer {
     private final InputManager inputManager;
     private IComponent activeComponent;
 
-    public ComponentContainer() {
+    public ComponentContainer(InputManager inputManager) {
+        this.inputManager = inputManager;
         this.componentMap = new HashMap<>();
-        inputManager = new InputManager();
     }
 
     public void add(final IComponent component, final InputType[] inputTypes) {
