@@ -1,6 +1,7 @@
 package http;
 
 
+import com.google.gson.Gson;
 import config.Config;
 import image.ScreenGrab;
 import org.apache.http.HttpEntity;
@@ -20,6 +21,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 
 public class Upload {
 
@@ -47,8 +49,10 @@ public class Upload {
         HttpEntity httpEntity = MultipartEntityBuilder.create().addPart("file", new FileBody(file)).addPart("key", keyBody).build();
         httpPost.setEntity(httpEntity);
         HttpResponse response = httpClient.execute(httpPost);
+
+        parseResponse(response);
         if (response.getStatusLine().getStatusCode() == 200) {
-            java.util.Scanner s = new java.util.Scanner(response.getEntity().getContent()).useDelimiter("\\A");
+            Scanner s = new Scanner(response.getEntity().getContent()).useDelimiter("\\A");
             String url = s.hasNext() ? s.next() : "Empty response";
             StringSelection stringSelection = new StringSelection(target + url);
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -58,5 +62,18 @@ public class Upload {
         } else {
             throw new IOException("Statuscode: " + response.getStatusLine().getStatusCode());
         }
+    }
+
+    private static void parseResponse(HttpResponse response) throws IOException {
+        final Gson gson = new Gson();
+
+        final Scanner s = new Scanner(response.getEntity().getContent()).useDelimiter("\\A");
+        if (!s.hasNext()) {
+            return;
+        }
+
+        final String jsonString = s.next();
+
+
     }
 }
