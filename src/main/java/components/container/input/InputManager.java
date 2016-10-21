@@ -2,6 +2,7 @@ package components.container.input;
 
 import components.container.IComponent;
 import javafx.event.Event;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -10,6 +11,7 @@ import java.util.*;
  */
 public class InputManager implements IInputManager {
 
+    private static final Logger LOGGER = Logger.getLogger(InputManager.class);
     private final Map<InputType, Set<IComponent>> typeSetMap;
 
     public InputManager() {
@@ -49,7 +51,17 @@ public class InputManager implements IInputManager {
         if (componentSet == null) {
             return;
         }
-        componentSet.forEach(iComponent -> iComponent.handle(inputType, event));
+        final boolean[] handled = {false};
+        componentSet.forEach(iComponent -> {
+            if (iComponent.handle(inputType, event)) {
+                handled[0] = true;
+            }
+        });
+
+        if (!handled[0]) {
+            LOGGER.info("Input not handeld, exited");
+            System.exit(0);
+        }
     }
 
 }

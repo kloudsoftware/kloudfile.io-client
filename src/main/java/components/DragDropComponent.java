@@ -73,15 +73,17 @@ public class DragDropComponent implements IComponent {
     }
 
     @Override
-    public void handle(final InputType inputType, final Event event) {
+    public boolean handle(final InputType inputType, final Event event) {
 
         switch (inputType) {
             case DRAG_OVER:
                 this.handleDragOver(((DragEvent) event));
-                break;
+                return true;
             case DRAG_DROPPED:
                 this.handleDragDropped(((DragEvent) event));
-                break;
+                return true;
+            default:
+                return false;
         }
     }
 

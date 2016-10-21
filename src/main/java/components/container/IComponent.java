@@ -14,5 +14,5 @@ public interface IComponent {
 
     Scene getScene();
 
-    void handle(final InputType inputType, final Event event);
+    boolean handle(final InputType inputType, final Event event);
 }

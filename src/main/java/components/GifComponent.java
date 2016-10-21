@@ -100,7 +100,7 @@ public class GifComponent implements IComponent {
         }
     }
 
-    private void handleMouseReleased(MouseEvent event) {
+    private boolean handleMouseReleased(MouseEvent event) {
         LOGGER.info("Mouse released");
         stage.hide();
         stage.close();
@@ -119,27 +119,27 @@ public class GifComponent implements IComponent {
                 e.printStackTrace();
             }
         });
+
+        return true;
     }
 
 
-    private void handleKeyPressed(KeyEvent event) {
+    private boolean handleKeyPressed(KeyEvent event) {
         final String key = event.getCode().getName();
 
         if (key.equals(config.getProperties().getProperty("captureGIF"))) {
             LOGGER.info("captureGIF key pressed Key: " + key);
             try {
                 this.makePartialGif(begin);
+                return true;
             } catch (AWTException | IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-        } else {
-            LOGGER.info("Some other key pressed, exited Key: " + key);
-            System.exit(0);
         }
-
+        return false;
     }
 
-    private void handleMouseDragged(MouseEvent event) {
+    private boolean handleMouseDragged(MouseEvent event) {
         this.end = new Point2D(event.getX(), event.getY());
 
         final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
@@ -155,12 +155,13 @@ public class GifComponent implements IComponent {
             graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
             graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
         });
-
+        return true;
     }
 
-    private void handleMousePressed(MouseEvent event) {
+    private boolean handleMousePressed(MouseEvent event) {
         LOGGER.info("Mouse pressed");
         this.begin = new Point2D(event.getX(), event.getY());
+        return true;
     }
 
 
@@ -170,19 +171,18 @@ public class GifComponent implements IComponent {
     }
 
     @Override
-    public void handle(InputType inputType, Event event) {
+    public boolean handle(InputType inputType, Event event) {
         switch (inputType) {
             case MOUSE_PRESSED:
-                this.handleMousePressed(((MouseEvent) event));
-                break;
+                return this.handleMousePressed(((MouseEvent) event));
             case MOUSE_RELEASED:
-                this.handleMouseReleased(((MouseEvent) event));
-                break;
+                return this.handleMouseReleased(((MouseEvent) event));
             case MOUSE_DRAGGED:
-                this.handleMouseDragged(((MouseEvent) event));
-                break;
+                return this.handleMouseDragged(((MouseEvent) event));
             case KEY_PRESSED:
-                this.handleKeyPressed(((KeyEvent) event));
+                return this.handleKeyPressed(((KeyEvent) event));
+            default:
+                return false;
         }
     }
 }

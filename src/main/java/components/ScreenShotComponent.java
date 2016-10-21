@@ -57,7 +57,7 @@ public class ScreenShotComponent implements IComponent {
         return (OS.contains("mac") || OS.contains("darvin"));
     }
 
-    private void handleMouseReleased(MouseEvent event) {
+    private boolean handleMouseReleased(MouseEvent event) {
         LOGGER.info("Mouse released");
         stage.hide();
         stage.close();
@@ -74,30 +74,29 @@ public class ScreenShotComponent implements IComponent {
                 System.exit(0);
             }
         });
-
+        return true;
     }
 
-    private void handleKeyPressed(KeyEvent event) {
+    private boolean handleKeyPressed(KeyEvent event) {
         final String key = event.getCode().getName();
 
         if (key.equals(config.getProperties().getProperty("captureFullScreen"))) {
             LOGGER.info("Fullscreen Screenshot key pressed Key: " + key);
             try {
                 makeFullscreenScreenShot();
-                System.exit(0);
+                return true;
             } catch (IOException e) {
                 // showError(e.getLocalizedMessage());
                 e.printStackTrace();
                 System.exit(0);
             }
-        } else {
-            LOGGER.info("Some other key pressed, exited Key: " + key);
-            System.exit(0);
-        }
+        } else if (key.equals("G")) {
 
+        }
+        return false;
     }
 
-    private void handleMouseDragged(MouseEvent event) {
+    private boolean handleMouseDragged(MouseEvent event) {
         this.end = new Point2D(event.getX(), event.getY());
 
         final GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
@@ -113,12 +112,13 @@ public class ScreenShotComponent implements IComponent {
             graphicsContext2D.strokeRect(start.getX(), start.getY(), width, height);
             graphicsContext2D.fillRect(start.getX(), start.getY(), width, height);
         });
-
+        return true;
     }
 
-    private void handleMousePressed(MouseEvent event) {
+    private boolean handleMousePressed(MouseEvent event) {
         LOGGER.info("Mouse pressed");
         this.begin = new Point2D(event.getX(), event.getY());
+        return true;
     }
 
     private void makePartialScreenShot(Point2D start) throws AWTException, IOException {
@@ -178,19 +178,18 @@ public class ScreenShotComponent implements IComponent {
 
 
     @Override
-    public void handle(InputType inputType, javafx.event.Event event) {
+    public boolean handle(InputType inputType, javafx.event.Event event) {
         switch (inputType) {
             case MOUSE_PRESSED:
-                this.handleMousePressed(((MouseEvent) event));
-                break;
+                return this.handleMousePressed(((MouseEvent) event));
             case MOUSE_RELEASED:
-                this.handleMouseReleased(((MouseEvent) event));
-                break;
+                return this.handleMouseReleased(((MouseEvent) event));
             case MOUSE_DRAGGED:
-                this.handleMouseDragged(((MouseEvent) event));
-                break;
+                return this.handleMouseDragged(((MouseEvent) event));
             case KEY_PRESSED:
-                this.handleKeyPressed(((KeyEvent) event));
+                return this.handleKeyPressed(((KeyEvent) event));
+            default:
+                return false;
         }
     }
 }
