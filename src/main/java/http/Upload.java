@@ -21,6 +21,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Scanner;
 
 public class Upload {
@@ -50,30 +51,29 @@ public class Upload {
         httpPost.setEntity(httpEntity);
         HttpResponse response = httpClient.execute(httpPost);
 
-        parseResponse(response);
         if (response.getStatusLine().getStatusCode() == 200) {
-            Scanner s = new Scanner(response.getEntity().getContent()).useDelimiter("\\A");
-            String url = s.hasNext() ? s.next() : "Empty response";
-            StringSelection stringSelection = new StringSelection(target + url);
+            final UrlDTO urlDTO = parseResponse(response);
+            StringSelection stringSelection = new StringSelection(target + urlDTO.getFileViewUrl());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, stringSelection);
-            LOGGER.info("Pasted link to clipboard: " + target + url);
+            LOGGER.info("Pasted link to clipboard: " + target + urlDTO.getFileViewUrl());
+            LOGGER.info("Delete link: " + target + "/delete/" + urlDTO.getFileDeleteUrl());
             response.getEntity().getContent().close();
         } else {
             throw new IOException("Statuscode: " + response.getStatusLine().getStatusCode());
         }
     }
 
-    private static void parseResponse(HttpResponse response) throws IOException {
+    private static UrlDTO parseResponse(HttpResponse response) throws IOException {
         final Gson gson = new Gson();
 
         final Scanner s = new Scanner(response.getEntity().getContent()).useDelimiter("\\A");
         if (!s.hasNext()) {
-            return;
+            return null;
         }
 
         final String jsonString = s.next();
-
-
+        s.close();
+        return gson.fromJson(jsonString, UrlDTO.class);
     }
 }
