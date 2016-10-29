@@ -57,7 +57,7 @@ public class Upload {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, stringSelection);
             LOGGER.info("Pasted link to clipboard: " + target + urlDTO.getFileViewUrl());
-            LOGGER.info("Delete link: " + target + "/delete/" + urlDTO.getFileDeleteUrl());
+            LOGGER.info("Delete link: " + target + urlDTO.getFileDeleteUrl());
             response.getEntity().getContent().close();
         } else {
             throw new IOException("Statuscode: " + response.getStatusLine().getStatusCode());
