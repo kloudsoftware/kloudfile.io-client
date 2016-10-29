@@ -1,2 +1,2 @@
 # pushClient
-The Desktop client to interact with push -> https://github.com/probE466/push
+The Desktop client to interact with kloudfile -> https://github.com/probE466/kloudfile.io
