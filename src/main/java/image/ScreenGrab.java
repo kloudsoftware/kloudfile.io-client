@@ -345,7 +345,10 @@ public class ScreenGrab {
         final int frameCount = Integer.valueOf(config.getProperties().getProperty("GIFFrameCount"));
         final int timeBetweenFrames = Integer.valueOf(config.getProperties().getProperty("GIFTimeBetweenFrames"));
 
-        final File gifFile = new File("test.gif");
+        final String gifPath = System.getProperty("user.home")
+                + "/.push/"
+                + System.currentTimeMillis() + "gif.gif";
+        final File gifFile = new File(gifPath);
         LOGGER.info("started to record gif");
         final Rectangle rect = new Rectangle(
                 (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
