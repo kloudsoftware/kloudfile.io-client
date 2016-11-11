@@ -52,11 +52,6 @@ public class ScreenShotComponent implements IComponent {
         canvas = this.sceneManager.getScene(ScreenShotScene.class).getCanvas();
     }
 
-    private static final String OS = System.getProperty("os.name").toLowerCase();
-
-    private static boolean isMac() {
-        return (OS.contains("mac") || OS.contains("darvin"));
-    }
 
     private boolean handleMouseReleased() {
         LOGGER.info("Mouse released");
@@ -134,9 +129,6 @@ public class ScreenShotComponent implements IComponent {
             );
             capture = new Robot().createScreenCapture(rect);
             // TODO: 04/10/16 figure out gamma value
-            if (isMac()) {
-                capture = this.gammaCorrector.gammaCorrection(capture, 3.2);
-            }
             LOGGER.info(String.format("Size for partial screenshot: X = %s Y = %s Width = %s Height = %s",
                     rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             pushScreenshotToServer(capture);

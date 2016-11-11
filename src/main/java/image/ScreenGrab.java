@@ -1,6 +1,7 @@
 package image;
 
 import components.ScreenShotComponent;
+import components.ScreenShotComponentMac;
 import components.container.ComponentContainer;
 import components.container.input.InputManager;
 import components.container.input.InputType;
@@ -26,7 +27,8 @@ public class ScreenGrab {
         inputManager = new InputManager();
         componentContainer = new ComponentContainer(inputManager);
         sceneManager = new SceneManager(config, stage, inputManager);
-        componentContainer.add(new ScreenShotComponent(stage, config, ScreenHelper.getScreens(), sceneManager), InputType.KEY_PRESSED, InputType.MOUSE_DRAGGED, InputType.MOUSE_RELEASED, InputType.MOUSE_PRESSED);
+        componentContainer.add( isMac() ? new ScreenShotComponentMac() :
+                new ScreenShotComponent(stage, config, ScreenHelper.getScreens(), sceneManager), InputType.KEY_PRESSED, InputType.MOUSE_DRAGGED, InputType.MOUSE_RELEASED, InputType.MOUSE_PRESSED);
     }
 
     public void start() {
@@ -46,12 +48,11 @@ public class ScreenGrab {
     }
 
 
+    public static final String OS = System.getProperty("os.name").toLowerCase();
 
-
-
-
-
-
+    public static boolean isMac() {
+        return (OS.contains("mac") || OS.contains("darvin"));
+    }
 
 
 }
