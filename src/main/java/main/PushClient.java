@@ -14,7 +14,6 @@ public class PushClient extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        PushClient pushClient = new PushClient();
         Config config = new Config();
         ScreenGrab screenGrab = new ScreenGrab(config, primaryStage);
 

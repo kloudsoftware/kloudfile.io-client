@@ -49,6 +49,7 @@ public class ScreenShotComponent implements IComponent {
         this.config = config;
         this.screens = screens;
         this.sceneManager = sceneManager;
+        canvas = this.sceneManager.getScene(ScreenShotScene.class).getCanvas();
     }
 
     private static final String OS = System.getProperty("os.name").toLowerCase();
@@ -57,7 +58,7 @@ public class ScreenShotComponent implements IComponent {
         return (OS.contains("mac") || OS.contains("darvin"));
     }
 
-    private boolean handleMouseReleased(MouseEvent event) {
+    private boolean handleMouseReleased() {
         LOGGER.info("Mouse released");
         stage.hide();
         stage.close();
@@ -173,7 +174,7 @@ public class ScreenShotComponent implements IComponent {
 
     @Override
     public Scene getScene() {
-        return sceneManager.getScene(ScreenShotScene.class);
+        return sceneManager.getScene(ScreenShotScene.class).getScene();
     }
 
 
@@ -183,7 +184,7 @@ public class ScreenShotComponent implements IComponent {
             case MOUSE_PRESSED:
                 return this.handleMousePressed(((MouseEvent) event));
             case MOUSE_RELEASED:
-                return this.handleMouseReleased(((MouseEvent) event));
+                return this.handleMouseReleased();
             case MOUSE_DRAGGED:
                 return this.handleMouseDragged(((MouseEvent) event));
             case KEY_PRESSED:

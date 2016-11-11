@@ -17,7 +17,7 @@ import java.util.Map;
 public class SceneManager {
 
     public static final Logger LOGGER = Logger.getLogger(SceneManager.class);
-    private final Map<Class<? extends IScene>, Scene> sceneMap;
+    private final Map<Class<? extends IScene>, IScene> sceneMap;
     private final InputManager inputManager;
     private Scene activeScene;
 
@@ -31,15 +31,15 @@ public class SceneManager {
         stage.setResizable(false);
         stage.initStyle(StageStyle.TRANSPARENT);
         final ScreenShotScene screenShotScene = new ScreenShotScene(config, stage, ScreenHelper.getScreens(), inputManager);
-        final Scene mainScene = screenShotScene.build();
+        final IScene mainScene = screenShotScene.build();
 
-        stage.setScene(mainScene);
+        stage.setScene(mainScene.getScene());
 
         stage.show();
 
         sceneMap = new HashMap<>();
         sceneMap.put(ScreenShotScene.class, mainScene);
-        activeScene = (sceneMap.get(ScreenShotScene.class));
+        activeScene = sceneMap.get(ScreenShotScene.class).getScene();
 
     }
 
@@ -52,7 +52,7 @@ public class SceneManager {
     }
 
     public void switchTo(IScene scene) {
-        final Scene nextScene = sceneMap.get(scene.getClass());
+        final Scene nextScene = sceneMap.get(scene.getClass()).getScene();
         if (nextScene == null) {
             throw new IllegalArgumentException("Scene not registerd");
         }
@@ -60,9 +60,7 @@ public class SceneManager {
         setActiveScene(nextScene);
     }
 
-
-
-    public Scene getScene(final Class<? extends IScene> key) {
+    public IScene getScene(final Class<? extends IScene> key) {
         return sceneMap.get(key);
     }
 

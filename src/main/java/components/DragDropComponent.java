@@ -69,7 +69,7 @@ public class DragDropComponent implements IComponent {
 
     @Override
     public Scene getScene() {
-        return sceneManager.getScene(DragDropScene.class);
+        return sceneManager.getScene(DragDropScene.class).getScene();
     }
 
     @Override

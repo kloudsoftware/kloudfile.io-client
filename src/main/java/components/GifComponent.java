@@ -167,7 +167,7 @@ public class GifComponent implements IComponent {
 
     @Override
     public Scene getScene() {
-        return sceneManager.getScene(ScreenShotScene.class);
+        return sceneManager.getScene(ScreenShotScene.class).getScene();
     }
 
     @Override

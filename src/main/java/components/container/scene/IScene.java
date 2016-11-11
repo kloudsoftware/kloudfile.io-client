@@ -1,10 +1,13 @@
 package components.container.scene;
 
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 
 /**
  * Created by fr3d63 on 12/10/16.
  */
-interface IScene {
-    Scene build();
+public interface IScene {
+    IScene build();
+    Scene getScene();
+    Canvas getCanvas();
 }

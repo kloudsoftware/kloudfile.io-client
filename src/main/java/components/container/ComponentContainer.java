@@ -20,9 +20,12 @@ public class ComponentContainer {
         this.componentMap = new HashMap<>();
     }
 
-    public void add(final IComponent component, final InputType[] inputTypes) {
-            componentMap.put(component.getClass(), component);
-            inputManager.register(component, InputType.KEY_PRESSED);
+    public void add(final IComponent component, final InputType... inputTypes) {
+        componentMap.put(component.getClass(), component);
+
+        for (InputType inputType : inputTypes) {
+            inputManager.register(component, inputType);
+        }
     }
 
     public IComponent get(final Class<? extends IComponent> key) {
