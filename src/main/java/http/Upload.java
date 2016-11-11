@@ -3,10 +3,8 @@ package http;
 
 import com.google.gson.Gson;
 import config.Config;
-import image.ScreenGrab;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -21,14 +19,13 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Scanner;
 
 public class Upload {
 
     private static final Logger LOGGER = Logger.getLogger(Upload.class.getName());
 
-    public static final String POST = "/post";
+    public static final String POST = "/api/post";
 
     public static void uploadTempContent(final File file, final String target, final Config config) throws IOException {
         LOGGER.info("Uploading Temp Content");
