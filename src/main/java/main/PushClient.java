@@ -16,7 +16,6 @@ public class PushClient extends Application {
     public void start(Stage primaryStage) throws Exception {
         Config config = new Config();
         ScreenGrab screenGrab = new ScreenGrab(config, primaryStage);
-
-        screenGrab.start();
+        screenGrab.begin();
     }
 }

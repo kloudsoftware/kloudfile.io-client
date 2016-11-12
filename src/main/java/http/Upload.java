@@ -25,7 +25,7 @@ public class Upload {
 
     private static final Logger LOGGER = Logger.getLogger(Upload.class.getName());
 
-    public static final String POST = "/post";
+    public static final String POST = "/api/post";
 
     public static void uploadTempContent(final File file, final String target, final Config config) throws IOException {
         LOGGER.info("Uploading Temp Content");

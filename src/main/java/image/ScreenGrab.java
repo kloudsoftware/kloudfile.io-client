@@ -1,5 +1,6 @@
 package image;
 
+import components.GifComponent;
 import components.ScreenShotComponent;
 import components.ScreenShotComponentMac;
 import components.container.ComponentContainer;
@@ -20,6 +21,11 @@ public class ScreenGrab {
     private final SceneManager sceneManager;
     private final InputManager inputManager;
     private final ComponentContainer componentContainer;
+    private static final String OS = System.getProperty("os.name").toLowerCase();
+
+    private static boolean isMac() {
+        return (OS.contains("mac") || OS.contains("darvin"));
+    }
 
     public ScreenGrab(final Config config, final Stage stage) {
         this.config = config;
@@ -27,11 +33,13 @@ public class ScreenGrab {
         inputManager = new InputManager();
         componentContainer = new ComponentContainer(inputManager);
         sceneManager = new SceneManager(config, stage, inputManager);
-        componentContainer.add( isMac() ? new ScreenShotComponentMac() :
-                new ScreenShotComponent(stage, config, ScreenHelper.getScreens(), sceneManager), InputType.KEY_PRESSED, InputType.MOUSE_DRAGGED, InputType.MOUSE_RELEASED, InputType.MOUSE_PRESSED);
     }
 
-    public void start() {
+    public void begin() {
+        componentContainer.add(isMac() ? new ScreenShotComponentMac() : new ScreenShotComponent(stage, config, ScreenHelper.getScreens(), sceneManager),
+                InputType.KEY_PRESSED, InputType.MOUSE_DRAGGED, InputType.MOUSE_RELEASED, InputType.MOUSE_PRESSED);
+        componentContainer.add(new GifComponent(stage, config, ScreenHelper.getScreens(), sceneManager),
+                InputType.KEY_PRESSED, InputType.MOUSE_DRAGGED, InputType.MOUSE_RELEASED, InputType.MOUSE_PRESSED);
     }
 
 
@@ -45,13 +53,6 @@ public class ScreenGrab {
         alert.setContentText(error);
 
         alert.showAndWait();
-    }
-
-
-    public static final String OS = System.getProperty("os.name").toLowerCase();
-
-    public static boolean isMac() {
-        return (OS.contains("mac") || OS.contains("darvin"));
     }
 
 

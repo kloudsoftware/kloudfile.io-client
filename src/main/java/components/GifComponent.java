@@ -1,6 +1,6 @@
 package components;
 
-import components.container.IComponent;
+import components.container.interfaces.IComponent;
 import components.container.input.InputType;
 import components.container.scene.SceneManager;
 import components.container.scene.ScreenShotScene;
@@ -8,13 +8,11 @@ import config.Config;
 import helper.ScreenHelper;
 import http.Upload;
 import image.gif.GifWriter;
-import javafx.event.*;
 import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;

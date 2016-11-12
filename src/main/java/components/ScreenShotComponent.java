@@ -1,13 +1,12 @@
 package components;
 
-import components.container.IComponent;
+import components.container.interfaces.IComponent;
 import components.container.input.InputType;
 import components.container.scene.SceneManager;
 import components.container.scene.ScreenShotScene;
 import config.Config;
 import helper.ScreenHelper;
 import http.Upload;
-import image.GammaCorrector;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -41,7 +40,6 @@ public class ScreenShotComponent implements IComponent {
     private Point2D end;
     private double width;
     private double height;
-    private final GammaCorrector gammaCorrector = new GammaCorrector();
     private final SceneManager sceneManager;
 
     public ScreenShotComponent(Stage stage, Config config, Rectangle2D screens, SceneManager sceneManager) {

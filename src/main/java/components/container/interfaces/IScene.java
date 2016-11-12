@@ -1,4 +1,4 @@
-package components.container.scene;
+package components.container.interfaces;
 
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;

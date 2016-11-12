@@ -1,6 +1,6 @@
 package components;
 
-import components.container.IComponent;
+import components.container.interfaces.IComponent;
 import components.container.input.InputType;
 import components.container.scene.DragDropScene;
 import components.container.scene.SceneManager;

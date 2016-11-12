@@ -1,5 +1,6 @@
 package components.container;
 
+import components.container.interfaces.IComponent;
 import components.container.input.InputManager;
 import components.container.input.InputType;
 

@@ -1,5 +1,6 @@
 package components.container.scene;
 
+import components.container.interfaces.IScene;
 import config.Config;
 import helper.ScreenHelper;
 import javafx.scene.Group;

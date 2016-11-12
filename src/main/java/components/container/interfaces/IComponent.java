@@ -1,11 +1,8 @@
-package components.container;
+package components.container.interfaces;
 
 import components.container.input.InputType;
 import javafx.event.Event;
 import javafx.scene.Scene;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 
 /**
  * Created by fr3d63 on 10/10/16.

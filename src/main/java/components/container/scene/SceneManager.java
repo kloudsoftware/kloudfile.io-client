@@ -1,5 +1,6 @@
 package components.container.scene;
 
+import components.container.interfaces.IScene;
 import components.container.input.InputManager;
 import config.Config;
 import helper.ScreenHelper;

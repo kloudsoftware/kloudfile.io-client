@@ -1,6 +1,7 @@
 package components.container.input;
 
-import components.container.IComponent;
+import components.container.interfaces.IComponent;
+import components.container.interfaces.IInputManager;
 import javafx.event.Event;
 import org.apache.log4j.Logger;
 
@@ -45,8 +46,10 @@ public class InputManager implements IInputManager {
         }
     }
 
+    // TODO: 12.11.2016 Only handle the component that is required
+
     @Override
-    public void forEach(InputType inputType, final Event event) {
+    public void handle(InputType inputType, final Event event) {
         Set<IComponent> componentSet = typeSetMap.get(inputType);
         if (componentSet == null) {
             return;

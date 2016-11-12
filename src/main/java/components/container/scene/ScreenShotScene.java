@@ -1,13 +1,12 @@
 package components.container.scene;
 
+import components.container.interfaces.IScene;
 import components.container.input.InputManager;
 import components.container.input.InputType;
 import config.Config;
 import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.awt.geom.Rectangle2D;
@@ -39,10 +38,10 @@ public class ScreenShotScene implements IScene {
         root.getChildren().add(canvas);
 
 
-        scene.setOnKeyPressed(event -> inputManager.forEach(InputType.KEY_PRESSED, event));
-        scene.setOnMouseDragged(event -> inputManager.forEach(InputType.MOUSE_DRAGGED, event));
-        scene.setOnMouseReleased(event -> inputManager.forEach(InputType.MOUSE_RELEASED, event));
-        scene.setOnMousePressed(event -> inputManager.forEach(InputType.MOUSE_PRESSED, event));
+        scene.setOnKeyPressed(event -> inputManager.handle(InputType.KEY_PRESSED, event));
+        scene.setOnMouseDragged(event -> inputManager.handle(InputType.MOUSE_DRAGGED, event));
+        scene.setOnMouseReleased(event -> inputManager.handle(InputType.MOUSE_RELEASED, event));
+        scene.setOnMousePressed(event -> inputManager.handle(InputType.MOUSE_PRESSED, event));
         return this;
     }
 
