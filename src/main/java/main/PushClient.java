@@ -6,6 +6,7 @@ import image.ScreenGrab;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+
 public class PushClient extends Application {
 
     public static void main(String[] args) {
@@ -14,6 +15,8 @@ public class PushClient extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
+
         Config config = new Config();
         ScreenGrab screenGrab = new ScreenGrab(config, primaryStage);
 

@@ -6,12 +6,15 @@ import config.Config;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.log4j.Logger;
 
 import java.awt.*;
@@ -19,6 +22,11 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Scanner;
 
 public class Upload {
@@ -40,7 +48,13 @@ public class Upload {
 
     private static void uploadDataToServer(File file, String target, final Config config) throws IOException {
         LOGGER.info("Uploading Data. File: " + file.getName() + " Target: " + target);
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient = null;
+        try {
+            httpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                    .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, (TrustStrategy) (arg0, arg1) -> true).build()).build();
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+            e.printStackTrace();
+        }
         String key = config.getProperties().getProperty("key");
         HttpPost httpPost = new HttpPost(target + POST);
         StringBody keyBody = new StringBody(key, ContentType.TEXT_PLAIN);
