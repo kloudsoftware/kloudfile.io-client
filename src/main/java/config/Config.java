@@ -2,9 +2,9 @@ package config;
 
 
 import helper.IOHelper;
+import lombok.Cleanup;
 
 import java.io.*;
-import java.util.Optional;
 import java.util.Properties;
 
 public class Config {
@@ -14,20 +14,18 @@ public class Config {
     private Properties properties;
 
     public Config() throws IOException {
-        try (InputStream fsin = this.getClass().getClassLoader().getResourceAsStream("push.properties")) {
-            if (!configFile.exists()) {
-                configFileDir.mkdirs();
-                try (FileOutputStream fout = new FileOutputStream(configFile)) {
-                    configFile.createNewFile();
-                    IOHelper.copy(fsin, fout);
-                    fout.flush();
-                }
-            }
+        @Cleanup InputStream fsin = this.getClass().getClassLoader().getResourceAsStream("push.properties");
+        if (!configFile.exists()) {
+            configFileDir.mkdirs();
+            @Cleanup FileOutputStream fout = new FileOutputStream(configFile);
+            configFile.createNewFile();
+            IOHelper.copy(fsin, fout);
+            fout.flush();
         }
         this.properties = new Properties();
-        try (FileInputStream sysIn = new FileInputStream(configFile)) {
-            properties.load(sysIn);
-        }
+        @Cleanup FileInputStream sysIn = new FileInputStream(configFile);
+        properties.load(sysIn);
+
     }
 
     public Properties getProperties() {
