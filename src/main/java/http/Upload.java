@@ -1,8 +1,8 @@
 package http;
 
 
-import com.google.gson.Gson;
 import config.Config;
+import lombok.extern.log4j.Log4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -15,39 +15,39 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.log4j.Logger;
 
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Scanner;
 
+@Log4j
 public class Upload {
-
-    private static final Logger LOGGER = Logger.getLogger(Upload.class.getName());
 
     public static final String POST = "/api/post";
 
-    public static void uploadTempContent(final File file, final String target, final Config config) throws IOException {
-        LOGGER.info("Uploading Temp Content");
-        uploadDataToServer(file, target, config);
-        file.delete();
+    public static void uploadTempContent(final File file) throws IOException {
+        log.info("Uploading Temp Content");
+        HttpQueue.addToQueue(new HttpEvent(prepareEntity(file),
+                new FileUploadCallBack(Config.getInstance().getProperties().getProperty("url"), file, true)));
     }
 
-    public static void uploadFile(final File file, final String target, final Config config) throws IOException {
-        LOGGER.info("Uploading File");
-        uploadDataToServer(file, target, config);
+    public static void uploadFile(final File file) throws IOException {
+        log.info("Uploading File");
+        httpQueue.addToQueue(new HttpEvent(prepareEntity(file),
+                new FileUploadCallBack(Config.getInstance().getProperties().getProperty("url"), false)));
     }
 
-    private static void uploadDataToServer(File file, String target, final Config config) throws IOException {
-        LOGGER.info("Uploading Data. File: " + file.getName() + " Target: " + target);
+    private static HttpEntity prepareEntity(final File file) {
+        String key = Config.getInstance().getProperties().getProperty("key");
+        StringBody keyBody = new StringBody(key, ContentType.TEXT_PLAIN);
+
+        return MultipartEntityBuilder.create().addPart("file", new FileBody(file)).addPart("key", keyBody).build();
+    }
+
+    static HttpResponse uploadDataToServer(HttpEntity httpEntity) throws IOException {
+        String target = Config.getInstance().getProperties().getProperty("url");
         CloseableHttpClient httpClient = null;
         try {
             httpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
@@ -55,36 +55,11 @@ public class Upload {
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             e.printStackTrace();
         }
-        String key = config.getProperties().getProperty("key");
+
         HttpPost httpPost = new HttpPost(target + POST);
-        StringBody keyBody = new StringBody(key, ContentType.TEXT_PLAIN);
-        HttpEntity httpEntity = MultipartEntityBuilder.create().addPart("file", new FileBody(file)).addPart("key", keyBody).build();
         httpPost.setEntity(httpEntity);
         HttpResponse response = httpClient.execute(httpPost);
 
-        if (response.getStatusLine().getStatusCode() == 200) {
-            final UrlDTO urlDTO = parseResponse(response);
-            StringSelection stringSelection = new StringSelection(target + urlDTO.getFileViewUrl());
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(stringSelection, stringSelection);
-            LOGGER.info("Pasted link to clipboard: " + target + urlDTO.getFileViewUrl());
-            LOGGER.info("Delete link: " + target + urlDTO.getFileDeleteUrl());
-            response.getEntity().getContent().close();
-        } else {
-            throw new IOException("Statuscode: " + response.getStatusLine().getStatusCode());
-        }
-    }
-
-    private static UrlDTO parseResponse(HttpResponse response) throws IOException {
-        final Gson gson = new Gson();
-
-        final Scanner s = new Scanner(response.getEntity().getContent()).useDelimiter("\\A");
-        if (!s.hasNext()) {
-            return null;
-        }
-
-        final String jsonString = s.next();
-        s.close();
-        return gson.fromJson(jsonString, UrlDTO.class);
+        return response;
     }
 }

@@ -14,7 +14,7 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.apache.log4j.Logger;
+import lombok.extern.log4j.Log4j;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.FileImageOutputStream;
@@ -35,9 +35,9 @@ import java.util.zip.ZipOutputStream;
 import static javafx.scene.paint.Color.GRAY;
 import static javafx.scene.paint.Color.GREY;
 
+@Log4j
 public class ScreenGrab {
 
-    private static final Logger LOGGER = Logger.getLogger(ScreenGrab.class.getName());
     private static final String OS = System.getProperty("os.name").toLowerCase();
     private final Config config;
     private final Stage stage;
@@ -112,7 +112,7 @@ public class ScreenGrab {
 
     private EventHandler<MouseEvent> handleMouseReleased() {
         return event -> {
-            LOGGER.info("Mouse released");
+            log.info("Mouse released");
             stage.hide();
             stage.close();
             GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
@@ -143,7 +143,7 @@ public class ScreenGrab {
 
     private EventHandler<DragEvent> handleDragDropped() {
         return event -> {
-            LOGGER.info("file drag dropped");
+            log.info("file drag dropped");
             Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasFiles()) {
@@ -202,10 +202,10 @@ public class ScreenGrab {
         return event -> {
             final String key = event.getCode().getName();
             if (key.equals(config.getProperties().getProperty("uploadFile"))) {
-                LOGGER.info("dragDrop key pressed Key: " + key);
+                log.info("dragDrop key pressed Key: " + key);
                 setUpDragDropScene();
             } else if (key.equals(config.getProperties().getProperty("captureFullScreen"))) {
-                LOGGER.info("Fullscreen Screenshot key pressed Key: " + key);
+                log.info("Fullscreen Screenshot key pressed Key: " + key);
                 try {
                     makeFullscreenScreenShot();
                     System.exit(0);
@@ -215,10 +215,10 @@ public class ScreenGrab {
                     System.exit(0);
                 }
             } else if (key.equals(config.getProperties().getProperty("captureGIF"))) {
-                LOGGER.info("captureGIF key pressed Key: " + key);
+                log.info("captureGIF key pressed Key: " + key);
                 this.wantsGif = true;
             } else {
-                LOGGER.info("Some other key pressed, exited Key: " + key);
+                log.info("Some other key pressed, exited Key: " + key);
                 System.exit(0);
             }
         };
@@ -226,7 +226,7 @@ public class ScreenGrab {
 
     private EventHandler<MouseEvent> handleMousePressed() {
         return event -> {
-            LOGGER.info("Mouse pressed");
+            log.info("Mouse pressed");
             this.begin = new Point2D(event.getX(), event.getY());
         };
     }
@@ -278,7 +278,7 @@ public class ScreenGrab {
             }
             zout.close();
 
-            Upload.uploadTempContent(new File(path), config.getProperties().getProperty("url"), config);
+            Upload.uploadTempContent(new File(path));
 
         }
     }
@@ -287,7 +287,8 @@ public class ScreenGrab {
         String filePath;
         filePath = db.getFiles().get(0).getAbsolutePath();
         try {
-            Upload.uploadFile(new File(filePath), config.getProperties().getProperty("url"), config);
+
+            Upload.uploadFile(new File(filePath));
         } catch (IOException e) {
             showError(e.getLocalizedMessage());
             e.printStackTrace();
@@ -314,7 +315,7 @@ public class ScreenGrab {
 
 
     private void showError(final String error) {
-        LOGGER.fatal(error);
+        log.fatal(error);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setContentText(error);
@@ -331,7 +332,7 @@ public class ScreenGrab {
                 Rectangle2D.union(result, graphicsConfiguration.getBounds(), result);
             }
         }
-        LOGGER.info(String.format("Screensize calculated: X = %s Y = %s Width = %s Height = %s",
+        log.info(String.format("Screensize calculated: X = %s Y = %s Width = %s Height = %s",
                 result.getX(), result.getY(), result.getWidth(), result.getHeight()));
         return result;
     }
@@ -349,14 +350,14 @@ public class ScreenGrab {
                 + "/.push/"
                 + System.currentTimeMillis() + "gif.gif";
         final File gifFile = new File(gifPath);
-        LOGGER.info("started to record gif");
+        log.info("started to record gif");
         final Rectangle rect = new Rectangle(
                 (int) start.getX() + Integer.valueOf(config.getProperties().getProperty("offset")),
                 (int) start.getY(),
                 (int) width,
                 (int) height
         );
-        LOGGER.info(String.format("Size for partial gif: X = %s Y = %s Width = %s Height = %s",
+        log.info(String.format("Size for partial gif: X = %s Y = %s Width = %s Height = %s",
                 rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
         try (ImageOutputStream imageOut = new FileImageOutputStream(gifFile)) {
             robot = new Robot();
@@ -365,7 +366,7 @@ public class ScreenGrab {
                 Thread.sleep(timeBetweenFrames);
             }
 
-            LOGGER.info("start to pack gif");
+            log.info("start to pack gif");
 
             GifWriter gifWriter = new GifWriter(imageOut, imageList.get(0).getType(), timeBetweenFrames, true);
 
@@ -373,11 +374,11 @@ public class ScreenGrab {
                 gifWriter.writeToSequence(bufferedImage);
             }
 
-            LOGGER.info("finished packing gif");
+            log.info("finished packing gif");
             gifWriter.close();
             imageOut.close();
 
-            Upload.uploadTempContent(gifFile, config.getProperties().getProperty("url"), config);
+            Upload.uploadTempContent(gifFile);
             System.exit(0);
 
         }
@@ -394,7 +395,7 @@ public class ScreenGrab {
                     (int) height
             );
             capture = new Robot().createScreenCapture(rect);
-            LOGGER.info(String.format("Size for partial screenshot: X = %s Y = %s Width = %s Height = %s",
+            log.info(String.format("Size for partial screenshot: X = %s Y = %s Width = %s Height = %s",
                     rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
             pushScreenshotToServer(capture);
         }
@@ -409,7 +410,7 @@ public class ScreenGrab {
                         + System.currentTimeMillis()
                         + "screengrab.png");
         ImageIO.write(capture, "png", imageFile);
-        Upload.uploadTempContent(imageFile, config.getProperties().getProperty("url"), config);
+        Upload.uploadTempContent(imageFile);
     }
 
 
