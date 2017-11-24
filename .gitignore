@@ -8,3 +8,4 @@ gradle/
 build/
 image.png
 src/.DS_Store
+push.log

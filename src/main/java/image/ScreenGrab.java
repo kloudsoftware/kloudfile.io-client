@@ -14,6 +14,7 @@ import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j;
 
 import javax.imageio.ImageIO;
@@ -36,11 +37,13 @@ import static javafx.scene.paint.Color.GRAY;
 import static javafx.scene.paint.Color.GREY;
 
 @Log4j
+@RequiredArgsConstructor
 public class ScreenGrab {
 
     private static final String OS = System.getProperty("os.name").toLowerCase();
     private final Config config;
     private final Stage stage;
+    private final Upload upload;
 
     private Canvas canvas;
     private Point2D begin;
@@ -49,11 +52,6 @@ public class ScreenGrab {
     private double height;
     private boolean wantsGif;
 
-
-    public ScreenGrab(final Config config, final Stage stage) {
-        this.config = config;
-        this.stage = stage;
-    }
 
     private static boolean isWindows() {
         return (OS.contains("win"));
@@ -84,6 +82,7 @@ public class ScreenGrab {
     }
 
     public void start() {
+        upload.start();
         stage.setX(Integer.valueOf(config.getProperties().getProperty("offset")));
         stage.setY(0);
         stage.setOpacity(.1);
@@ -125,14 +124,14 @@ public class ScreenGrab {
                         makePartialScreenShot(start);
                     } catch (AWTException | IOException e) {
                         showError(e.getLocalizedMessage());
-                        System.exit(0);
+                        this.finish();
                     }
                 } else {
                     try {
                         makePartialGif(start);
                     } catch (AWTException | IOException | InterruptedException e) {
                         showError(e.getLocalizedMessage());
-                        System.exit(0);
+                        this.finish();
                         e.printStackTrace();
                     }
                 }
@@ -162,7 +161,7 @@ public class ScreenGrab {
             event.setDropCompleted(success);
             event.consume();
 
-            System.exit(0);
+            this.finish();
         };
     }
 
@@ -208,18 +207,18 @@ public class ScreenGrab {
                 log.info("Fullscreen Screenshot key pressed Key: " + key);
                 try {
                     makeFullscreenScreenShot();
-                    System.exit(0);
+                    this.finish();
                 } catch (IOException e) {
                     showError(e.getLocalizedMessage());
                     e.printStackTrace();
-                    System.exit(0);
+                    this.finish();
                 }
             } else if (key.equals(config.getProperties().getProperty("captureGIF"))) {
                 log.info("captureGIF key pressed Key: " + key);
                 this.wantsGif = true;
             } else {
                 log.info("Some other key pressed, exited Key: " + key);
-                System.exit(0);
+                this.finish();
             }
         };
     }
@@ -278,7 +277,7 @@ public class ScreenGrab {
             }
             zout.close();
 
-            Upload.uploadTempContent(new File(path));
+            upload.uploadTempContent(new File(path));
 
         }
     }
@@ -288,7 +287,7 @@ public class ScreenGrab {
         filePath = db.getFiles().get(0).getAbsolutePath();
         try {
 
-            Upload.uploadFile(new File(filePath));
+            upload.uploadFile(new File(filePath));
         } catch (IOException e) {
             showError(e.getLocalizedMessage());
             e.printStackTrace();
@@ -378,8 +377,8 @@ public class ScreenGrab {
             gifWriter.close();
             imageOut.close();
 
-            Upload.uploadTempContent(gifFile);
-            System.exit(0);
+            upload.uploadTempContent(gifFile);
+            this.finish();
 
         }
     }
@@ -400,7 +399,7 @@ public class ScreenGrab {
             pushScreenshotToServer(capture);
         }
 
-        System.exit(0);
+        this.finish();
     }
 
     private void pushScreenshotToServer(BufferedImage capture) throws IOException {
@@ -410,8 +409,10 @@ public class ScreenGrab {
                         + System.currentTimeMillis()
                         + "screengrab.png");
         ImageIO.write(capture, "png", imageFile);
-        Upload.uploadTempContent(imageFile);
+        upload.uploadTempContent(imageFile);
     }
 
-
+    private void finish() {
+        upload.signalFinished();
+    }
 }
